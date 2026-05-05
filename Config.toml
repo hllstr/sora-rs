@@ -3,4 +3,3 @@ session_path = "database/session/whatsapp.db"
 custom_code = "HELLSTAR"
 mode = "self"
 warmup = "off"
-warmup_interval = 30

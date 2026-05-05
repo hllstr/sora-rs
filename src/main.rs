@@ -53,7 +53,11 @@ async fn main() -> anyhow::Result<()> {
 
     display_startup(
         config.phone_number.as_str(),
-        &config.superuser.clone().unwrap_or("None".to_string()),
+        &if config.superuser.is_empty() {
+            "None".to_string()
+        } else {
+            config.superuser.join(", ")
+        },
         state.get_prefixes().to_vec(),
     );
 

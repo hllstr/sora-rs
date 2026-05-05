@@ -155,7 +155,6 @@ STATE
 Current Mode: {:?}
 Active Prefix: {:?}
 Warmup Mode: {:?}
-Warmup Interval: {}
 Runtime: {}
 
 SYSTEM
@@ -190,7 +189,6 @@ Active Threads: {}
             ctx.state.get_mode(),
             ctx.state.get_prefixes(),
             ctx.state.get_warmup(),
-            ctx.state.get_warmup_interval(),
             runtime,
             get_os_name(),
             cpu_brand,

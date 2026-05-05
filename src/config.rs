@@ -34,11 +34,10 @@ pub struct AppConfig {
     pub custom_code: String,
     pub mode: BotMode,
     pub warmup: WarmupMode,
-    pub warmup_interval: u64,
     #[serde(skip)]
     pub phone_number: String,
-    #[serde(skip_serializing)]
-    pub superuser: Option<String>,
+    #[serde(skip)]
+    pub superuser: Vec<String>,
 }
 
 impl AppConfig {
@@ -48,7 +47,11 @@ impl AppConfig {
         let su = std::env::var("SUPERUSER").ok();
         let toml_str = fs::read_to_string("Config.toml")?;
         let mut config: AppConfig = toml::from_str(&toml_str)?;
-        config.superuser = su;
+        config.superuser = if let Some(su_str) = su {
+            su_str.split(',').map(|s| s.trim().to_string()).collect()
+        } else {
+            vec![]
+        };
         config.phone_number = phone;
         Ok(config)
     }

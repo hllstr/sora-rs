@@ -32,15 +32,6 @@ cmd!(
                 let _ = ctx.state.set_config(ConfigKey::Warmup, ConfigValue::Text(val_str.clone()));
                 ctx.react("✅️").await?;
             },
-            "warmup_interval" => {
-                if let Ok(num) = val_str.parse::<u64>() {
-                    let _ = ctx.state.set_config(ConfigKey::WarmupInterval, ConfigValue::Number(num));
-                    ctx.react("✅️").await?;
-                } else {
-                    ctx.react("❌").await?;
-                    return Ok(());
-                }
-            },
             _ => {
                 ctx.react("❔").await?;
                 return Ok(());
@@ -55,7 +46,6 @@ cmd!(
                 custom_code: state.config.custom_code.clone(),
                 session_path: state.config.session_path.clone(),
                 warmup: state.get_warmup(),
-                warmup_interval: state.get_warmup_interval(),
                 mode: state.get_mode(),
                 prefixes: state.get_prefixes().to_vec(),
             };

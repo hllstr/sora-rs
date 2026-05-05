@@ -13,7 +13,7 @@ use wacore::types::message::MessageInfo;
 use wacore::{client::context::SendContextResolver, types::events::Event};
 use whatsapp_rust::client::Client;
 
-static SUPERUSER_LID: LazyLock<RwLock<Option<String>>> = LazyLock::new(|| RwLock::new(None));
+static SUPERUSER_LID: LazyLock<RwLock<Vec<String>>> = LazyLock::new(|| RwLock::new(vec![]));
 
 pub async fn event_handler(
     event: Event,
@@ -42,7 +42,8 @@ async fn handle_connected(config: Arc<AppConfig>, client: Arc<Client>) {
     }
 
     let _ = client.presence().set_available().await;
-    if let Some(su_pn) = &config.superuser {
+    let mut lids = vec![];
+    for su_pn in &config.superuser {
         let mut found_lid = client.get_lid_for_phone(su_pn).await.map(|j| j.to_string());
         if found_lid.is_none() {
             match client.contacts().get_info(&[su_pn.as_str()]).await {
@@ -57,12 +58,13 @@ async fn handle_connected(config: Arc<AppConfig>, client: Arc<Client>) {
             }
         }
         if let Some(lid) = found_lid {
-            let mut lock = SUPERUSER_LID.write().await;
-            *lock = Some(lid);
+            lids.push(lid);
         } else {
             log::warn!("Unable to get LID for superuser: {}", su_pn);
         }
     }
+    let mut lock = SUPERUSER_LID.write().await;
+    *lock = lids;
 }
 
 async fn handle_message(
@@ -197,9 +199,9 @@ async fn is_privileged(sender: &str, info: &MessageInfo, config: &Arc<AppConfig>
     let me = info.source.is_from_me;
     let su = if info.source.sender.is_lid() {
         let lock = SUPERUSER_LID.read().await;
-        lock.as_deref() == Some(sender)
+        lock.contains(&sender.to_string())
     } else {
-        config.superuser.as_deref() == Some(sender)
+        config.superuser.contains(&sender.to_string())
     };
 
     me || su

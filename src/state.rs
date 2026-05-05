@@ -8,13 +8,11 @@ pub enum ConfigKey {
     Mode,
     Prefixes,
     Warmup,
-    WarmupInterval,
 }
 
 pub enum ConfigValue {
     Text(String),
     List(Vec<String>),
-    Number(u64),
 }
 
 pub struct AppState {
@@ -25,7 +23,6 @@ pub struct AppState {
     pub mode: RwLock<BotMode>,
     pub prefixes: RwLock<Arc<Vec<String>>>,
     pub warmup: RwLock<WarmupMode>,
-    pub warmup_interval: RwLock<u64>,
 }
 
 impl AppState {
@@ -41,7 +38,6 @@ impl AppState {
             prefixes: RwLock::new(Arc::new(config.prefixes.clone())),
             mode: RwLock::new(config.mode),
             warmup: RwLock::new(config.warmup),
-            warmup_interval: RwLock::new(config.warmup_interval),
             config,
         })
     }
@@ -68,10 +64,6 @@ impl AppState {
 
     pub fn get_warmup(&self) -> WarmupMode {
         *self.warmup.read().unwrap()
-    }
-
-    pub fn get_warmup_interval(&self) -> u64 {
-        *self.warmup_interval.read().unwrap()
     }
 
     pub fn set_cache(&self, key: &str, value: &str) {
@@ -110,11 +102,6 @@ impl AppState {
             (ConfigKey::Warmup, ConfigValue::Text(val)) => {
                 let mut warmup = self.warmup.write().unwrap();
                 *warmup = WarmupMode::from(val.as_str());
-                Ok(())
-            }
-            (ConfigKey::WarmupInterval, ConfigValue::Number(val)) => {
-                let mut interval = self.warmup_interval.write().unwrap();
-                *interval = val;
                 Ok(())
             }
             _ => Err("invalid datatype for this field"),
