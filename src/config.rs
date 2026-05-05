@@ -6,7 +6,7 @@ use std::fs;
 pub enum BotMode {
     #[serde(rename = "self")]
     SelfMode,
-    
+
     #[serde(rename = "public")]
     Public,
 }
@@ -14,7 +14,6 @@ pub enum BotMode {
 impl From<&str> for WarmupMode {
     fn from(s: &str) -> Self {
         match s.to_lowercase().as_str() {
-            "high" => WarmupMode::High,
             "normal" => WarmupMode::Normal,
             _ => WarmupMode::Off,
         }
@@ -24,7 +23,6 @@ impl From<&str> for WarmupMode {
 #[derive(Debug, Deserialize, Serialize, Clone, Copy, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum WarmupMode {
-    High,
     Normal,
     Off,
 }

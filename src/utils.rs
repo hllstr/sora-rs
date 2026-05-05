@@ -71,6 +71,49 @@ impl MessageExt for Message {
     }
 }
 
+pub fn extract_type_only(msg: &Message) -> (String, String) {
+    let debug_str = format!("{:?}", msg);
+    let raw_type = debug_str
+        .split(": Some(")
+        .next()
+        .and_then(|s| s.split_whitespace().last())
+        .unwrap_or("unknown")
+        .to_string();
+    (raw_type, String::new())
+}
+
+pub fn extract_context(msg: &Message) -> Option<&waproto::whatsapp::ContextInfo> {
+    if let Some(ctx) = &msg
+        .extended_text_message
+        .as_ref()
+        .and_then(|m| m.context_info.as_ref())
+    {
+        return Some(ctx);
+    }
+    if let Some(ctx) = &msg
+        .image_message
+        .as_ref()
+        .and_then(|m| m.context_info.as_ref())
+    {
+        return Some(ctx);
+    }
+    if let Some(ctx) = &msg
+        .video_message
+        .as_ref()
+        .and_then(|m| m.context_info.as_ref())
+    {
+        return Some(ctx);
+    }
+    if let Some(ctx) = &msg
+        .sticker_message
+        .as_ref()
+        .and_then(|m| m.context_info.as_ref())
+    {
+        return Some(ctx);
+    }
+    None
+}
+
 pub async fn get_media_bytes(state: Arc<AppState>, data: Vec<u8>) -> anyhow::Result<Vec<u8>> {
     if let Ok(str_val) = std::str::from_utf8(&data) {
         let trimmed_val = str_val.trim();

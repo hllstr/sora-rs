@@ -58,12 +58,6 @@ impl AppState {
             .unwrap_or(0)
     }
 
-    pub fn set_last_msg_data(&self, chat_jid: &str, msg_id: &str, sender_jid: &str) {
-        let key = format!("last_msg:{}", chat_jid);
-        let value = format!("{}|{}", msg_id, sender_jid);
-        self.cache.insert(key, value);
-    }
-
     pub fn get_mode(&self) -> BotMode {
         *self.mode.read().unwrap()
     }
@@ -82,7 +76,6 @@ impl AppState {
 
     pub fn set_cache(&self, key: &str, value: &str) {
         self.cache.insert(key.to_string(), value.to_string());
-
     }
 
     // not used yet, but someday I'll be uncommenting this

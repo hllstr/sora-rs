@@ -26,101 +26,36 @@ mod client;
 mod commands;
 mod config;
 mod handler;
+mod logger;
 mod state;
 mod utils;
 
-use chrono::Local;
+use colored::*;
 use log::info;
+use std::env;
 use std::sync::Arc;
-
-use crate::config::WarmupMode;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     if cfg!(windows) {
         panic!("Please delete your garbage OS and install Linux instead to run this program.");
     }
-    
+
     #[cfg(feature = "profiling")]
     let _profiler = dhat::Profiler::new_heap();
-    
-    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info"))
-        .format(|buf, record| {
-            use std::io::Write;
-            writeln!(
-                buf,
-                "{} [{}] - {}",
-                Local::now().format("%H:%M:%S"),
-                record.level(),
-                record.args()
-            )
-        })
-        .init();
+
     let config = Arc::new(config::AppConfig::load()?);
     let state = state::AppState::load(config.clone());
     let mut bot = client::create_bot(config.clone(), state.clone()).await?;
-    info!("Starting Bot...");
 
     let client = bot.client().clone();
     let bot_handle = bot.run().await?;
 
-    let state_worker = state.clone();
-    let client_worker = bot.client().clone();
-
-    tokio::spawn(async move {
-        loop {
-            let current_warmup = state_worker.get_warmup();
-            let current_interval = state_worker.get_warmup_interval();
-
-            if current_warmup == WarmupMode::High {
-                let targets: Vec<_> = state_worker
-                    .cache
-                    .iter()
-                    .filter(|entry| entry.key().starts_with("last_msg:"))
-                    .filter_map(|entry| {
-                        let chat_jid_raw = entry.key().strip_prefix("last_msg:")?;
-                        let chat_jid: whatsapp_rust::Jid = chat_jid_raw.parse().ok()?;
-
-                        let val = entry.value();
-                        let (msg_id, part_raw) = val.split_once('|')?;
-
-                        let participant = if part_raw.is_empty() {
-                            None
-                        } else {
-                            part_raw.parse().ok()
-                        };
-
-                        Some((chat_jid, msg_id.to_string(), participant))
-                    })
-                    .collect();
-
-                if !targets.is_empty() {
-                    info!(
-                        "Running periodic high warmup for {} chats (Interval: {}s)...",
-                        targets.len(),
-                        current_interval
-                    );
-
-                    for (chat_jid, msg_id, participant) in targets {
-                        let client_clone = client_worker.clone();
-                        tokio::spawn(async move {
-                            let _ = crate::utils::send_warmup(
-                                client_clone,
-                                chat_jid,
-                                msg_id,
-                                participant,
-                            )
-                            .await;
-                        });
-                    }
-                }
-
-                tokio::time::sleep(std::time::Duration::from_secs(current_interval)).await;
-            } else {
-                tokio::time::sleep(std::time::Duration::from_secs(5)).await;
-            }
-        }
-    });
+    display_startup(
+        config.phone_number.as_str(),
+        &config.superuser.clone().unwrap_or("None".to_string()),
+        state.get_prefixes().to_vec(),
+    );
 
     tokio::select! {
         _ = tokio::signal::ctrl_c() => {
@@ -132,4 +67,77 @@ async fn main() -> anyhow::Result<()> {
         }
     }
     Ok(())
+}
+
+fn display_startup(phone_number: &str, superuser: &str, prefixes: Vec<String>) {
+    println!(
+        "{}",
+        "╭────────────────────────────────────────────────────────╮".bright_cyan()
+    );
+    println!(
+        "{}  {}                 {}  {}",
+        "│".bright_cyan(),
+        "S O R A  O N  R U S T".bold().white(),
+        format!("[ ver. {} ]", env!("CARGO_PKG_VERSION")).magenta(),
+        "│".bright_cyan()
+    );
+    println!(
+        "{}",
+        "╰────────────────────────────────────────────────────────╯".bright_cyan()
+    );
+
+    println!(
+        " {} {}    : {}",
+        "»".bright_cyan(),
+        "Author ".green(),
+        "hllstr".on_bright_black()
+    );
+    #[cfg(feature = "profiling")]
+    let allocator = "dhat";
+    #[cfg(feature = "stable")]
+    let allocator = "Jemalloc";
+    #[cfg(feature = "performance")]
+    let allocator = "mimalloc";
+    println!(
+        " {} {} : {}",
+        "»".bright_cyan(),
+        "Allocator ".green(),
+        allocator.yellow()
+    );
+
+    println!(
+        " {} {} : {}",
+        "»".bright_cyan(),
+        "Bot Number".green(),
+        phone_number.white()
+    );
+    println!(
+        " {} {}: {}",
+        "»".bright_cyan(),
+        "Superuser  ".green(),
+        superuser.bright_red()
+    );
+
+    let formatted_prefixes = prefixes
+        .iter()
+        .map(|p| format!("[ {} ]", p).bright_blue().to_string())
+        .collect::<Vec<_>>()
+        .join(" ");
+    println!(
+        " {} {}   : {}",
+        "»".bright_cyan(),
+        "Prefixes".green(),
+        formatted_prefixes
+    );
+
+    println!(
+        "\n {}",
+        " \"Nice, All set! Starting bot...\""
+            .italic()
+            .bright_magenta()
+    );
+    println!(
+        "{}",
+        "──────────────────────────────────────────────────────────".dimmed()
+    );
 }
