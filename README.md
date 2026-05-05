@@ -21,7 +21,6 @@ A Simple, Lightweight and Fast WhatsApp Bot Written on rust.
 - ai
 - translate
 - multiple superuser
-- better msg logging
 - store
   
 ## Acknowledgemnt
