@@ -1,6 +1,7 @@
 use crate::state::AppState;
 use async_trait::async_trait;
 use linkme::distributed_slice;
+use whatsapp_rust::SendResult;
 use std::sync::LazyLock;
 use std::{collections::HashMap, sync::Arc};
 use wacore::types::message::MessageInfo;
@@ -20,7 +21,7 @@ pub struct Context<'a> {
 }
 
 impl<'a> Context<'a> {
-    pub async fn react(&self, emoji: &str) -> anyhow::Result<String> {
+    pub async fn react(&self, emoji: &str) -> anyhow::Result<SendResult> {
         let reaction = wa::Message {
             reaction_message: Some(ReactionMessage {
                 key: Some(wa::MessageKey {
@@ -53,7 +54,7 @@ impl<'a> Context<'a> {
             reply: true
         )
         .await?;
-        Ok(msg_id)
+        Ok(msg_id.message_id)
     }
 }
 #[distributed_slice]

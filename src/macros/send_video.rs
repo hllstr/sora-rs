@@ -13,6 +13,7 @@ macro_rules! send_video {
             use waproto::whatsapp::{Message, message::VideoMessage, ContextInfo};
             use wacore::download::MediaType;
             use std::sync::Arc;
+            use whatsapp_rust::UploadOptions;
 
             let client = &$ctx.client;
             let info = &$ctx.info;
@@ -21,7 +22,7 @@ macro_rules! send_video {
             let video_bytes = $crate::utils::get_media_bytes(Arc::clone(&state), raw_data).await?;
             let thumbnail_bytes = $crate::utils::generate_video_thumbnail(&video_bytes).await.ok();
 
-            let upload = client.upload(video_bytes, MediaType::Video).await?;
+            let upload = client.upload(video_bytes, MediaType::Video, UploadOptions::default()).await?;
 
             let mut context_info = if $is_reply {
                 let mut ctx_info = build_quote_context_with_info(
@@ -51,9 +52,9 @@ macro_rules! send_video {
                 video_message: Some(Box::new(VideoMessage {
                     url: Some(upload.url),
                     direct_path: Some(upload.direct_path),
-                    media_key: Some(upload.media_key),
-                    file_sha256: Some(upload.file_sha256),
-                    file_enc_sha256: Some(upload.file_enc_sha256),
+                    media_key: Some(upload.media_key.to_vec()),
+                    file_sha256: Some(upload.file_sha256.to_vec()),
+                    file_enc_sha256: Some(upload.file_enc_sha256.to_vec()),
                     file_length: Some(upload.file_length),
                     mimetype: Some("video/mp4".to_string()),
                     caption: Some($caption.to_string()),

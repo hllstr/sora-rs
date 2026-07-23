@@ -4,6 +4,7 @@ use crate::config::WarmupMode;
 use crate::state::AppState;
 use crate::utils::MessageExt;
 use chrono::Utc;
+use qr2term::print_qr;
 use std::sync::Arc;
 use std::sync::LazyLock;
 use tokio::sync::RwLock;
@@ -25,12 +26,25 @@ pub async fn event_handler(
         Event::Connected(_) => handle_connected(config, client).await,
         Event::Message(msg, info) => {
             crate::logger::dump(&info, &msg);
-            handle_message(*msg, client, config, info, state).await;
+            handle_message(
+                Arc::unwrap_or_clone(msg),
+                client,
+                config,
+                Arc::unwrap_or_clone(info),
+                state,
+            )
+            .await;
         }
         Event::GroupUpdate(update) => handle_group_exp(update, state).await,
         Event::PairingCode { code, .. } => {
             println!("Pair code: {}", code);
-        }
+        },
+        Event::PairingQrCode { code, .. } => {
+            match print_qr(code) {
+                Ok(_) => (),
+                Err(e) => eprintln!("Failed to print QR code: {}", e),
+            }
+        },
         _ => {}
     }
 }
@@ -44,23 +58,23 @@ async fn handle_connected(config: Arc<AppConfig>, client: Arc<Client>) {
     let _ = client.presence().set_available().await;
     let mut lids = vec![];
     for su_pn in &config.superuser {
-        let mut found_lid = client.get_lid_for_phone(su_pn).await.map(|j| j.to_string());
+        let found_lid = client.get_lid_for_phone(su_pn).await.map(|j| j.to_string());
         if found_lid.is_none() {
-            match client.contacts().get_info(&[su_pn.as_str()]).await {
-                Ok(contacts) => {
-                    if let Some(contact) = contacts.into_iter().next()
-                        && let Some(lid) = contact.lid
-                    {
-                        found_lid = Some(lid.user);
-                    }
-                }
-                Err(e) => log::error!("Unable retrieve contact info from server: {}", e),
-            }
+            // match client.contacts().(&[su_pn.as_str()]).await {
+            //     Ok(contacts) => {
+            //         if let Some(contact) = contacts.into_iter().next()
+            //             && let Some(lid) = contact.lid
+            //         {
+            //             found_lid = Some(lid.user);
+            //         }
+            //     }
+            //     Err(e) => eprintln!("Unable retrieve contact info from server: {}", e),
+            // }
         }
         if let Some(lid) = found_lid {
             lids.push(lid);
         } else {
-            log::warn!("Unable to get LID for superuser: {}", su_pn);
+            eprintln!("Unable to get LID for superuser: {}", su_pn);
         }
     }
     let mut lock = SUPERUSER_LID.write().await;
@@ -145,30 +159,29 @@ async fn handle_message(
                     return;
                 }
 
-                if cmd.category() == "group" {
-                    if !info_c.source.is_group {
+                if cmd.category() == "group"
+                    && !info_c.source.is_group {
                         return;
                     }
-                    if let Ok(metadata) = client_c.groups().get_metadata(&info_c.source.chat).await
-                    {
-                        let is_admin = metadata
-                            .participants
-                            .iter()
-                            .any(|p| p.jid.user == info_c.source.sender.user && p.is_admin);
-                        if !is_admin {
-                            return;
-                        }
-                    } else {
-                        return;
-                    }
-                }
+                    // if let Ok(metadata) = client_c.groups().get_metadata(&info_c.source.chat).await
+                    // {
+                    //     let is_admin = metadata
+                    //         .participants
+                    //         .iter()
+                    //         .any(|p| p.jid.user == info_c.source.sender.user && p.is_admin);
+                    //     if !is_admin {
+                    //         return;
+                    //     }
+                    // } else {
+                    //     return;
+                    // }
 
                 let _ = client_c
                     .chatstate()
                     .send_composing(&info_c.source.chat)
                     .await;
                 if let Err(e) = cmd.execute(ctx).await {
-                    log::error!("Command error: {}", e);
+                    eprintln!("Command error: {}", e);
                 }
                 let _ = client_c.chatstate().send_paused(&info_c.source.chat).await;
             }

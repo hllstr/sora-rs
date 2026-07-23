@@ -10,17 +10,16 @@ chrono = "0.4.44"
 colored = "3.1.1"
 dhat = { version = "0.3.3", optional = true }
 dotenvy = "0.15.7"
-env_logger = "0.11.10"
 libc = "0.2.186"
 linkme = "0.3.36"
-log = "0.4.29"
 mimalloc = { version = "0.1.50", optional = true }
+qr2term = "0.3.3"
 tikv-jemallocator = { version = "0.6.1", optional = true }
 toml = "1.1.2"
-wacore = "0.5"
-waproto = "0.5"
-whatsapp-rust-tokio-transport = "0.5"
-whatsapp-rust-ureq-http-client = "0.5"
+wacore = "0.6"
+waproto = "0.6"
+whatsapp-rust-tokio-transport = "0.6"
+whatsapp-rust-ureq-http-client = "0.6"
 
 [features]
 default = ["stable"]
@@ -50,7 +49,7 @@ version = "1.52"
 features = ["macros", "rt-multi-thread", "fs", "process"]
 
 [dependencies.whatsapp-rust]
-version = "0.5"
+version = "0.6"
 features = ["signal", "sqlite-storage", "tokio-native", "tokio-runtime", "simd", "moka-cache", "ureq-client"]
 default-features = false
 

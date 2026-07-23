@@ -179,8 +179,8 @@ Swap Used: {}
 Active Threads: {}
 ```",
             app_name,
-            get_lib_version(),
             app_version,
+            get_lib_version(),
             compiler,
             allocator,
             build_profile,

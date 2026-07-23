@@ -31,7 +31,6 @@ mod state;
 mod utils;
 
 use colored::*;
-use log::info;
 use std::env;
 use std::sync::Arc;
 
@@ -48,7 +47,6 @@ async fn main() -> anyhow::Result<()> {
     let state = state::AppState::load(config.clone());
     let mut bot = client::create_bot(config.clone(), state.clone()).await?;
 
-    let client = bot.client().clone();
     let bot_handle = bot.run().await?;
 
     display_startup(
@@ -63,8 +61,7 @@ async fn main() -> anyhow::Result<()> {
 
     tokio::select! {
         _ = tokio::signal::ctrl_c() => {
-            info!("SIGINT received, Performing graceful shutdown...");
-            client.disconnect().await;
+            println!("\nSIGINT received, Performing graceful shutdown...");
         }
         res = bot_handle => {
             res?;

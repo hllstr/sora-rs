@@ -11,6 +11,7 @@ macro_rules! send_audio {
             use wacore::proto_helpers::build_quote_context_with_info;
             use waproto::whatsapp::{Message, message::AudioMessage, ContextInfo};
             use wacore::download::MediaType;
+            use whatsapp_rust::UploadOptions;
 
             let client = &$ctx.client;
             let info = &$ctx.info;
@@ -18,7 +19,7 @@ macro_rules! send_audio {
 
             let raw_data: Vec<u8> = $data.into();
             let audio_bytes = $crate::utils::get_media_bytes(std::sync::Arc::clone(state), raw_data).await?;
-            let upload = client.upload(audio_bytes, MediaType::Audio).await?;
+            let upload = client.upload(audio_bytes, MediaType::Audio, UploadOptions::default()).await?;
 
             let mut context_info = if $is_reply {
                 let mut ctx_info = build_quote_context_with_info(
@@ -48,9 +49,9 @@ macro_rules! send_audio {
                 audio_message: Some(Box::new(AudioMessage {
                     url: Some(upload.url),
                     direct_path: Some(upload.direct_path),
-                    media_key: Some(upload.media_key),
-                    file_sha256: Some(upload.file_sha256),
-                    file_enc_sha256: Some(upload.file_enc_sha256),
+                    media_key: Some(upload.media_key.to_vec()),
+                    file_sha256: Some(upload.file_sha256.to_vec()),
+                    file_enc_sha256: Some(upload.file_enc_sha256.to_vec()),
                     file_length: Some(upload.file_length),
                     mimetype: Some("audio/mpeg".to_string()),
                     context_info: Some(Box::new(context_info)),
