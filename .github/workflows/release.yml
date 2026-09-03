@@ -11,10 +11,17 @@ permissions:
 
 jobs:
   build-and-release:
-    name: Build (${{ matrix.build_type }})
+    name: Build (${{ matrix.build_type }} / ${{ matrix.target }})
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
+        build_type: [stable, performance, profiling]
+        target:
+          - x86_64-unknown-linux-gnu
+          - x86_64-unknown-linux-musl
+          - aarch64-unknown-linux-gnu
+          - aarch64-unknown-linux-musl
         include:
           - build_type: stable
             cargo_flags: "--features stable"
@@ -31,26 +38,32 @@ jobs:
         uses: dtolnay/rust-toolchain@nightly
         with:
           toolchain: nightly
+          targets: ${{ matrix.target }}
+
+      - name: Install cross
+        run: cargo install cross --git https://github.com/cross-rs/cross
 
       - name: Build Release
         run: |
           if [[ "${{ matrix.build_type }}" == "profiling" ]]; then
-            cargo build --profile profiling --no-default-features --features profiling
+            cross build --profile profiling --target ${{ matrix.target }} --no-default-features --features profiling
           else
-            cargo build --release ${{ matrix.cargo_flags }}
+            cross build --release --target ${{ matrix.target }} ${{ matrix.cargo_flags }}
           fi
 
       - name: Prepare Binary Name
         run: |
-          if [ -f "target/profiling/sora-on-rust" ]; then
-            mv target/profiling/sora-on-rust sora-on-rust-profiling
-          else
-            mv target/release/sora-on-rust sora-on-rust-${{ matrix.build_type }}
+          SRC="target/${{ matrix.target }}/release/sora-on-rust"
+          if [[ "${{ matrix.build_type }}" == "profiling" ]]; then
+            SRC="target/${{ matrix.target }}/profiling/sora-on-rust"
           fi
+          DEST="sora-on-rust-${{ matrix.build_type }}-${{ matrix.target }}"
+          mv "$SRC" "$DEST"
+          echo "BIN_PATH=$DEST" >> "$GITHUB_ENV"
 
       - name: Upload Binary to Release
         uses: softprops/action-gh-release@v2
         with:
-          files: sora-on-rust-${{ matrix.build_type }}
+          files: ${{ env.BIN_PATH }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
