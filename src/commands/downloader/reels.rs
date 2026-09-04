@@ -54,6 +54,6 @@ cmd!(
         )
         .await?;
 
-        println!("Done!");
+        crate::logger::info("reels", "done");
     }
 );

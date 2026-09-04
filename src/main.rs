@@ -63,7 +63,8 @@ async fn main() -> anyhow::Result<()> {
 
     tokio::select! {
         _ = tokio::signal::ctrl_c() => {
-            println!("\nSIGINT received, Performing graceful shutdown...");
+            println!();
+            logger::info("shutdown", "SIGINT received, performing graceful shutdown...");
             bot_handle.shutdown().await;
         }
         _ = &mut bot_handle => {}
@@ -72,6 +73,21 @@ async fn main() -> anyhow::Result<()> {
 }
 
 fn display_startup(phone_number: &str, superuser: &str, prefixes: Vec<String>) {
+    const LABEL_WIDTH: usize = 10;
+
+    #[cfg(feature = "profiling")]
+    let allocator = "dhat";
+    #[cfg(feature = "stable")]
+    let allocator = "Jemalloc";
+    #[cfg(feature = "performance")]
+    let allocator = "mimalloc";
+
+    let formatted_prefixes = prefixes
+        .iter()
+        .map(|p| format!("[ {} ]", p).bright_blue().to_string())
+        .collect::<Vec<_>>()
+        .join(" ");
+
     println!(
         "{}",
         "╭────────────────────────────────────────────────────────╮".bright_cyan()
@@ -87,56 +103,27 @@ fn display_startup(phone_number: &str, superuser: &str, prefixes: Vec<String>) {
         "{}",
         "╰────────────────────────────────────────────────────────╯".bright_cyan()
     );
+    println!();
 
-    println!(
-        " {} {}    : {}",
-        "»".bright_cyan(),
-        "Author ".green(),
-        "hllstr".on_bright_black()
-    );
-    #[cfg(feature = "profiling")]
-    let allocator = "dhat";
-    #[cfg(feature = "stable")]
-    let allocator = "Jemalloc";
-    #[cfg(feature = "performance")]
-    let allocator = "mimalloc";
-    println!(
-        " {} {} : {}",
-        "»".bright_cyan(),
-        "Allocator ".green(),
-        allocator.yellow()
-    );
+    let mut line = |label: &str, value: String| {
+        println!(
+            " {} {:<width$} {}",
+            "»".bright_cyan(),
+            format!("{label}").green(),
+            value,
+            width = LABEL_WIDTH
+        );
+    };
 
-    println!(
-        " {} {} : {}",
-        "»".bright_cyan(),
-        "Bot Number".green(),
-        phone_number.white()
-    );
-    println!(
-        " {} {}: {}",
-        "»".bright_cyan(),
-        "Superuser  ".green(),
-        superuser.bright_red()
-    );
-
-    let formatted_prefixes = prefixes
-        .iter()
-        .map(|p| format!("[ {} ]", p).bright_blue().to_string())
-        .collect::<Vec<_>>()
-        .join(" ");
-    println!(
-        " {} {}   : {}",
-        "»".bright_cyan(),
-        "Prefixes".green(),
-        formatted_prefixes
-    );
+    line("Author", "hllstr".on_bright_black().to_string());
+    line("Allocator", allocator.yellow().to_string());
+    line("Bot Number", phone_number.white().to_string());
+    line("Superuser", superuser.bright_red().to_string());
+    line("Prefixes", formatted_prefixes);
 
     println!(
         "\n {}",
-        " \"Nice, All set! Starting bot...\""
-            .italic()
-            .bright_magenta()
+        "\"Nice, All set! Starting bot...\"".italic().bright_magenta()
     );
     println!(
         "{}",
