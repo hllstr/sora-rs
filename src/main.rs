@@ -105,7 +105,7 @@ fn display_startup(phone_number: &str, superuser: &str, prefixes: Vec<String>) {
     );
     println!();
 
-    let mut line = |label: &str, value: String| {
+    let line = |label: &str, value: String| {
         println!(
             " {} {:<width$} {}",
             "»".bright_cyan(),
