@@ -26,6 +26,7 @@ macro_rules! send_audio {
                     &info.id,
                     &info.source.sender,
                     &info.source.chat,
+                    &info.source.chat,
                     $ctx.msg,
                 );
                 ctx_info.mentioned_jid = vec![info.source.sender.to_non_ad().to_string()];
@@ -46,7 +47,7 @@ macro_rules! send_audio {
             context_info.remote_jid = Some($ctx.info.source.chat.to_string());
 
             let audio_msg = Message {
-                audio_message: Some(Box::new(AudioMessage {
+                audio_message: buffa::MessageField::some(AudioMessage {
                     url: Some(upload.url),
                     direct_path: Some(upload.direct_path),
                     media_key: Some(upload.media_key.to_vec()),
@@ -54,9 +55,9 @@ macro_rules! send_audio {
                     file_enc_sha256: Some(upload.file_enc_sha256.to_vec()),
                     file_length: Some(upload.file_length),
                     mimetype: Some("audio/mpeg".to_string()),
-                    context_info: Some(Box::new(context_info)),
+                    context_info: buffa::MessageField::some(context_info),
                     ..Default::default()
-                })),
+                }),
                 ..Default::default()
             };
 

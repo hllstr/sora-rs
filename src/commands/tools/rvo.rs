@@ -7,9 +7,9 @@ cmd!(
     aliases: [],
     category: "tools",
     execute: |ctx| {
-        let quoted = if let Some(ext) = &ctx.msg.extended_text_message
-            && let Some(ci) = &ext.context_info
-            && let Some(q) = &ci.quoted_message {
+        let quoted = if let Some(ext) = ctx.msg.extended_text_message.as_option()
+            && let Some(ci) = ext.context_info.as_option()
+            && let Some(q) = ci.quoted_message.as_option() {
             q
         } else {
             ctx.react("❔").await?;
@@ -17,16 +17,15 @@ cmd!(
         };
 
         let current_expiration = ctx.state.get_expiration(&ctx.info.source.chat.to_string());
-        let apply_expiration = |context_info: &mut Option<Box<wa::ContextInfo>>| {
+        let apply_expiration = |context_info: &mut buffa::MessageField<wa::ContextInfo>| {
             if current_expiration > 0 {
-                let ci = context_info.get_or_insert_with(|| Box::new(wa::ContextInfo::default()));
-                ci.expiration = Some(current_expiration);
+                context_info.get_or_insert_default().expiration = Some(current_expiration);
             }
         };
-        let mut target_msg = *quoted.clone();
+        let mut target_msg = quoted.clone();
         let mut is_vo = false;
 
-        if let Some(img) = &mut target_msg.image_message {
+        if let Some(img) = target_msg.image_message.as_option_mut() {
             if img.view_once.unwrap_or(false) {
                 img.view_once = Some(false);
                 apply_expiration(&mut img.context_info);
@@ -34,7 +33,7 @@ cmd!(
             }
         }
 
-        else if let Some(vid) = &mut target_msg.video_message
+        else if let Some(vid) = target_msg.video_message.as_option_mut()
             && vid.view_once.unwrap_or(false) {
                 vid.view_once = Some(false);
                 apply_expiration(&mut vid.context_info);

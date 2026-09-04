@@ -8,8 +8,8 @@ cmd!(
     category: "group",
     execute: |ctx| {
         let mut targets: Vec<Jid> = Vec::new();
-        if let Some(ext_msg) = &ctx.msg.extended_text_message
-            && let Some(context) = &ext_msg.context_info {
+        if let Some(ext_msg) = ctx.msg.extended_text_message.as_option()
+            && let Some(context) = ext_msg.context_info.as_option() {
                 if ctx.args.is_empty() {
                     if let Some(participant) = &context.participant
                         && let Ok(jid) = participant.parse::<Jid>() {

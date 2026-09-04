@@ -16,7 +16,7 @@ pub trait MessageExt {
 
 impl MessageExt for Message {
     fn get_expiration_timer(&self) -> Option<u32> {
-        if let Some(proto) = &self.protocol_message
+        if let Some(proto) = self.protocol_message.as_option()
             && let Some(exp) = proto.ephemeral_expiration
         {
             return Some(exp);
@@ -26,18 +26,18 @@ impl MessageExt for Message {
             return Some(0);
         }
 
-        let context = if let Some(m) = &self.extended_text_message {
-            m.context_info.as_deref()
-        } else if let Some(m) = &self.image_message {
-            m.context_info.as_deref()
-        } else if let Some(m) = &self.video_message {
-            m.context_info.as_deref()
-        } else if let Some(m) = &self.document_message {
-            m.context_info.as_deref()
-        } else if let Some(m) = &self.sticker_message {
-            m.context_info.as_deref()
-        } else if let Some(m) = &self.audio_message {
-            m.context_info.as_deref()
+        let context = if let Some(m) = self.extended_text_message.as_option() {
+            m.context_info.as_option()
+        } else if let Some(m) = self.image_message.as_option() {
+            m.context_info.as_option()
+        } else if let Some(m) = self.video_message.as_option() {
+            m.context_info.as_option()
+        } else if let Some(m) = self.document_message.as_option() {
+            m.context_info.as_option()
+        } else if let Some(m) = self.sticker_message.as_option() {
+            m.context_info.as_option()
+        } else if let Some(m) = self.audio_message.as_option() {
+            m.context_info.as_option()
         } else {
             None
         };
@@ -48,23 +48,23 @@ impl MessageExt for Message {
         if let Some(t) = &self.conversation {
             return Some(t);
         }
-        if let Some(m) = &self.extended_text_message {
+        if let Some(m) = self.extended_text_message.as_option() {
             return m.text.as_ref();
         }
-        if let Some(m) = &self.image_message {
+        if let Some(m) = self.image_message.as_option() {
             return m.caption.as_ref();
         }
-        if let Some(m) = &self.video_message {
+        if let Some(m) = self.video_message.as_option() {
             return m.caption.as_ref();
         }
-        if let Some(m) = &self.document_message {
+        if let Some(m) = self.document_message.as_option() {
             return m.caption.as_ref();
         }
-        if let Some(m) = &self.document_with_caption_message {
+        if let Some(m) = self.document_with_caption_message.as_option() {
             return m
                 .message
-                .as_ref()
-                .and_then(|nested| nested.document_message.as_ref())
+                .as_option()
+                .and_then(|nested| nested.document_message.as_option())
                 .and_then(|doc| doc.caption.as_ref());
         }
         None
@@ -82,31 +82,31 @@ pub fn extract_type_only(msg: &Message) -> String {
 }
 
 pub fn extract_context(msg: &Message) -> Option<&whatsapp_rust::waproto::whatsapp::ContextInfo> {
-    if let Some(ctx) = &msg
+    if let Some(ctx) = msg
         .extended_text_message
-        .as_ref()
-        .and_then(|m| m.context_info.as_ref())
+        .as_option()
+        .and_then(|m| m.context_info.as_option())
     {
         return Some(ctx);
     }
-    if let Some(ctx) = &msg
+    if let Some(ctx) = msg
         .image_message
-        .as_ref()
-        .and_then(|m| m.context_info.as_ref())
+        .as_option()
+        .and_then(|m| m.context_info.as_option())
     {
         return Some(ctx);
     }
-    if let Some(ctx) = &msg
+    if let Some(ctx) = msg
         .video_message
-        .as_ref()
-        .and_then(|m| m.context_info.as_ref())
+        .as_option()
+        .and_then(|m| m.context_info.as_option())
     {
         return Some(ctx);
     }
-    if let Some(ctx) = &msg
+    if let Some(ctx) = msg
         .sticker_message
-        .as_ref()
-        .and_then(|m| m.context_info.as_ref())
+        .as_option()
+        .and_then(|m| m.context_info.as_option())
     {
         return Some(ctx);
     }
@@ -180,8 +180,8 @@ pub async fn send_warmup(
 ) -> anyhow::Result<()> {
     println!("Sending warmup message");
     let warmup_msg = wa::Message {
-        reaction_message: Some(wa::message::ReactionMessage {
-            key: Some(wa::MessageKey {
+        reaction_message: buffa::MessageField::some(wa::message::ReactionMessage {
+            key: buffa::MessageField::some(wa::MessageKey {
                 remote_jid: Some(chat_jid.to_string()),
                 from_me: Some(false),
                 id: Some(msg_id),

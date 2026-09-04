@@ -29,6 +29,7 @@ macro_rules! send_video {
                     &info.id,
                     &info.source.sender,
                     &info.source.chat,
+                    &info.source.chat,
                     $ctx.msg,
                 );
                 ctx_info.mentioned_jid = vec![info.source.sender.to_non_ad().to_string()];
@@ -49,7 +50,7 @@ macro_rules! send_video {
             context_info.remote_jid = Some(info.source.chat.to_string());
 
             let video_msg = Message {
-                video_message: Some(Box::new(VideoMessage {
+                video_message: buffa::MessageField::some(VideoMessage {
                     url: Some(upload.url),
                     direct_path: Some(upload.direct_path),
                     media_key: Some(upload.media_key.to_vec()),
@@ -59,9 +60,9 @@ macro_rules! send_video {
                     mimetype: Some("video/mp4".to_string()),
                     caption: Some($caption.to_string()),
                     jpeg_thumbnail: thumbnail_bytes,
-                    context_info: Some(Box::new(context_info)),
+                    context_info: buffa::MessageField::some(context_info),
                     ..Default::default()
-                })),
+                }),
                 ..Default::default()
             };
 

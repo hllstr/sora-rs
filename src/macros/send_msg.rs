@@ -22,6 +22,7 @@ macro_rules! send_msg {
                     $info.id.clone(),
                     &$info.source.sender.to_non_ad(),
                     &$info.source.chat,
+                    &$info.source.chat,
                     &$msg
                 );
 
@@ -35,11 +36,11 @@ macro_rules! send_msg {
             context.remote_jid = Some($info.source.chat.to_string());
 
             whatsapp_rust::waproto::whatsapp::Message {
-                extended_text_message: Some(Box::new(whatsapp_rust::waproto::whatsapp::message::ExtendedTextMessage {
+                extended_text_message: buffa::MessageField::some(whatsapp_rust::waproto::whatsapp::message::ExtendedTextMessage {
                     text: Some($text.to_string()),
-                    context_info: Some(Box::new(context)),
+                    context_info: buffa::MessageField::some(context),
                     ..Default::default()
-                })),
+                }),
                 ..Default::default()
             }
         } else {

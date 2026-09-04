@@ -24,8 +24,8 @@ cmd!(
         Ok(false)
     },
     execute: |ctx| {
-        let target_jid = if let Some(ext_msg) = &ctx.msg.extended_text_message
-        && let Some(context) = &ext_msg.context_info {
+        let target_jid = if let Some(ext_msg) = ctx.msg.extended_text_message.as_option()
+        && let Some(context) = ext_msg.context_info.as_option() {
             if let Some(participant) = &context.participant {
                 participant.clone()
             } else if let Some(mention) = context.mentioned_jid.first() {

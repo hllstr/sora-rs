@@ -22,6 +22,7 @@ pub async fn create_bot(config: Arc<AppConfig>, state: Arc<AppState>) -> anyhow:
             show_push_notification: true,
             custom_code: Some(config.custom_code.clone()),
             platform_id: Some(CompanionWebClientType::Chrome),
+            ..Default::default()
         })
         .on_event(move |event, client| {
             let st = Arc::clone(&state);

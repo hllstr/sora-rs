@@ -47,7 +47,7 @@ pub fn dump(info: &MessageInfo, msg: &Message) {
             println!("Expiration  : {}s", exp.to_string().yellow());
         }
 
-        if let Some(quoted) = &ctx.quoted_message {
+        if let Some(quoted) = ctx.quoted_message.as_option() {
             let q_body = quoted
                 .text_content()
                 .cloned()

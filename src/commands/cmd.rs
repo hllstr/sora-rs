@@ -23,8 +23,8 @@ pub struct Context<'a> {
 impl<'a> Context<'a> {
     pub async fn react(&self, emoji: &str) -> anyhow::Result<SendResult> {
         let reaction = wa::Message {
-            reaction_message: Some(ReactionMessage {
-                key: Some(wa::MessageKey {
+            reaction_message: buffa::MessageField::some(ReactionMessage {
+                key: buffa::MessageField::some(wa::MessageKey {
                     remote_jid: Some(self.info.source.chat.to_string()),
                     from_me: Some(false),
                     id: Some(self.info.id.to_string()),
@@ -42,9 +42,10 @@ impl<'a> Context<'a> {
             ..Default::default()
         };
 
-        self.client
+        Ok(self
+            .client
             .send_message(self.info.source.chat.clone(), reaction)
-            .await
+            .await?)
     }
     pub async fn reply(&self, text: &str) -> anyhow::Result<String> {
         let msg_id = crate::send_msg!(

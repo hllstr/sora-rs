@@ -54,7 +54,7 @@ pub async fn event_handler(
 }
 
 async fn handle_connected(config: Arc<AppConfig>, client: Arc<Client>) {
-    let current_name = client.get_push_name();
+    let current_name = client.push_name();
     if current_name.is_empty() {
         let _ = client.profile().set_push_name("sora-on-rust").await;
     }
