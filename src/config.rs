@@ -51,7 +51,13 @@ pub struct AppConfig {
 impl AppConfig {
     pub fn load() -> anyhow::Result<Self> {
         dotenvy::dotenv().ok();
-        let phone = std::env::var("PHONE_NUMBER").expect("PHONE_NUMBER must be set in .env");
+        let phone = match std::env::var("PHONE_NUMBER") {
+            Ok(phone) => phone,
+            Err(_) => {
+                crate::logger::warn("config", "PHONE_NUMBER is not set in .env");
+                std::process::exit(1);
+            }
+        };
         let su = std::env::var("SUPERUSER").ok();
         let toml_str = fs::read_to_string("Config.toml")?;
         let mut config: AppConfig = toml::from_str(&toml_str)?;
