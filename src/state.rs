@@ -1,8 +1,16 @@
 use dashmap::DashMap;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, RwLock};
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
 use crate::config::{AppConfig, BotMode, WarmupMode};
+
+const MAX_TRACKED_ENTRIES: usize = 20_000;
+
+struct TrackedEntry<T> {
+    value: T,
+    last_touch: u64,
+}
 
 pub enum ConfigKey {
     Mode,
@@ -18,7 +26,8 @@ pub enum ConfigValue {
 pub struct AppState {
     pub http_client: reqwest::Client,
     pub cache: DashMap<String, String>,
-    pub expirations: DashMap<String, u32>,
+    expirations: DashMap<String, TrackedEntry<u32>>,
+    touch_counter: AtomicU64,
     pub start_time: Instant,
     pub config: Arc<AppConfig>,
     pub mode: RwLock<BotMode>,
@@ -33,24 +42,68 @@ impl AppState {
         let expirations = DashMap::new();
         let http_client = reqwest::Client::new();
 
-        Arc::new(Self {
+        let state = Arc::new(Self {
             http_client,
             cache,
             expirations,
+            touch_counter: AtomicU64::new(0),
             start_time,
             prefixes: RwLock::new(Arc::new(config.prefixes.clone())),
             mode: RwLock::new(config.mode),
             warmup: RwLock::new(config.warmup),
             config,
-        })
+        });
+
+        let sweep_state = Arc::clone(&state);
+        tokio::spawn(async move {
+            let mut interval = tokio::time::interval(Duration::from_secs(600));
+            loop {
+                interval.tick().await;
+                sweep_state.evict_stale_expirations();
+            }
+        });
+
+        state
+    }
+
+    fn evict_stale_expirations(&self) {
+        let len = self.expirations.len();
+        if len <= MAX_TRACKED_ENTRIES {
+            return;
+        }
+
+        let overflow = len - MAX_TRACKED_ENTRIES;
+        let mut touches: Vec<(String, u64)> = self
+            .expirations
+            .iter()
+            .map(|e| (e.key().clone(), e.value().last_touch))
+            .collect();
+        touches.sort_unstable_by_key(|(_, t)| *t);
+
+        for (key, _) in touches.into_iter().take(overflow) {
+            self.expirations.remove(&key);
+        }
     }
 
     pub fn set_expiration(&self, jid: String, seconds: u32) {
-        self.expirations.insert(jid, seconds);
+        let tick = self.touch_counter.fetch_add(1, Ordering::Relaxed);
+        self.expirations.insert(
+            jid,
+            TrackedEntry {
+                value: seconds,
+                last_touch: tick,
+            },
+        );
     }
 
     pub fn get_expiration(&self, jid: &str) -> u32 {
-        self.expirations.get(jid).map(|v| *v).unwrap_or(0)
+        let tick = self.touch_counter.fetch_add(1, Ordering::Relaxed);
+        if let Some(mut entry) = self.expirations.get_mut(jid) {
+            entry.last_touch = tick;
+            entry.value
+        } else {
+            0
+        }
     }
 
     pub fn get_mode(&self) -> BotMode {

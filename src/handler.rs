@@ -8,7 +8,7 @@ use chrono::Utc;
 use qr2term::print_qr;
 use std::sync::Arc;
 use std::sync::LazyLock;
-use tokio::sync::RwLock;
+use tokio::sync::{RwLock, Semaphore};
 use whatsapp_rust::wacore::stanza::GroupNotificationAction;
 use whatsapp_rust::wacore::types::events::GroupUpdate;
 use whatsapp_rust::wacore::types::events::InboundMessage;
@@ -19,6 +19,8 @@ use whatsapp_rust::wacore::{client::context::SendContextResolver, types::events:
 use whatsapp_rust::client::Client;
 
 static SUPERUSER_LID: LazyLock<RwLock<Vec<String>>> = LazyLock::new(|| RwLock::new(vec![]));
+
+static MESSAGE_CONCURRENCY: LazyLock<Semaphore> = LazyLock::new(|| Semaphore::new(64));
 
 pub async fn event_handler(
     event: Arc<Event>,
@@ -123,6 +125,8 @@ async fn handle_message(
     let args_owned: Vec<String> = args.into_iter().map(str::to_owned).collect();
 
     tokio::spawn(async move {
+        let _permit = MESSAGE_CONCURRENCY.acquire().await;
+
         let args_ref: Vec<&str> = args_owned.iter().map(String::as_str).collect();
 
         let ctx = crate::commands::cmd::Context {
