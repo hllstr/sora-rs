@@ -1,8 +1,19 @@
 use crate::{cmd, commands::cmd::Context};
 use std::fs;
+use std::hash::{Hash, Hasher};
 use std::path::Path;
 use std::process::Stdio;
+use std::time::Duration;
 use tokio::process::Command;
+use tokio::time::timeout;
+
+const EXTERNAL_PROCESS_TIMEOUT: Duration = Duration::from_secs(120);
+
+fn cache_key(input: &str) -> String {
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    input.hash(&mut hasher);
+    format!("{:016x}", hasher.finish())
+}
 
 cmd!(
     Play,
@@ -28,24 +39,22 @@ async fn play_audio(ctx: Context<'_>) -> anyhow::Result<()> {
 
     ctx.react("🕒").await?;
     let raw_metadata: String;
-    let metadata_path = format!("downloads/{}.txt", input);
+    let metadata_path = format!("downloads/{}.txt", cache_key(&input));
     if Path::new(&metadata_path).exists() {
         println!("metadata cache hit!, skipping metadata fetch.");
         raw_metadata = tokio::fs::read_to_string(&metadata_path).await?;
     } else {
         println!("metadata cache miss, fetching metadata...");
-        let metadata_output = Command::new("yt-dlp")
-            .env_remove("NODE_CHANNEL_FD")
-            .args([
-                "--print",
-                "%(id)s|%(title)s|%(uploader)s|%(thumbnail)s",
-                "--no-playlist",
-                &format!("ytsearch:'{}'", input),
-                "--cookies",
-                cookie_path,
-            ])
-            .output()
-            .await?;
+        let mut metadata_cmd = Command::new("yt-dlp");
+        metadata_cmd.env_remove("NODE_CHANNEL_FD").args([
+            "--print",
+            "%(id)s|%(title)s|%(uploader)s|%(thumbnail)s",
+            "--no-playlist",
+            &format!("ytsearch:{}", input),
+            "--cookies",
+            cookie_path,
+        ]);
+        let metadata_output = timeout(EXTERNAL_PROCESS_TIMEOUT, metadata_cmd.output()).await??;
 
         raw_metadata = String::from_utf8_lossy(&metadata_output.stdout)
             .trim()
@@ -64,6 +73,16 @@ async fn play_audio(ctx: Context<'_>) -> anyhow::Result<()> {
     let title = parts[1];
     let channel = parts[2];
     let thumbnail_url = parts[3];
+
+    if video_id.is_empty()
+        || !video_id
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-')
+    {
+        ctx.reply("Video not found. perhaps something went wrong?")
+            .await?;
+        return Ok(());
+    }
 
     let file_path = format!("downloads/{}.mp3", video_id);
 
@@ -108,7 +127,13 @@ async fn play_audio(ctx: Context<'_>) -> anyhow::Result<()> {
         .stderr(Stdio::piped())
         .spawn()?;
 
-    let output = download_process.wait_with_output().await?;
+    let output = match timeout(EXTERNAL_PROCESS_TIMEOUT, download_process.wait_with_output()).await {
+        Ok(res) => res?,
+        Err(_) => {
+            ctx.reply("Download timed out.").await?;
+            return Ok(());
+        }
+    };
 
     if !output.status.success() {
         let err = String::from_utf8_lossy(&output.stderr);

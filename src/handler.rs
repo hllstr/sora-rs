@@ -32,10 +32,10 @@ pub async fn event_handler(
             for InboundMessage { message, info, .. } in batch.iter() {
                 crate::logger::dump(info, message);
                 handle_message(
-                    message.as_ref().clone(),
+                    Arc::clone(message),
                     Arc::clone(&client),
                     Arc::clone(&config),
-                    info.as_ref().clone(),
+                    Arc::clone(info),
                     Arc::clone(&state),
                 )
                 .await;
@@ -79,10 +79,10 @@ async fn handle_connected(config: Arc<AppConfig>, client: Arc<Client>) {
 }
 
 async fn handle_message(
-    msg: whatsapp_rust::waproto::whatsapp::Message,
+    msg: Arc<whatsapp_rust::waproto::whatsapp::Message>,
     client: Arc<Client>,
     config: Arc<AppConfig>,
-    info: MessageInfo,
+    info: Arc<MessageInfo>,
     state: Arc<AppState>,
 ) {
     let msg_timestamp = Utc::now() - info.timestamp;
@@ -100,18 +100,14 @@ async fn handle_message(
     };
 
     let prefixes = state.get_prefixes();
-    let found_prefix = prefixes
-        .iter()
-        .find(|p| text.starts_with(p.as_str()))
-        .cloned();
+    let found_prefix = prefixes.iter().find(|p| text.starts_with(p.as_str()));
     let is_command = found_prefix.is_some();
+    let prefix_len = found_prefix.map(|p| p.len()).unwrap_or(0);
 
-    let prefix_str = found_prefix.unwrap_or_default();
-
-    let base = text.strip_prefix(&prefix_str).unwrap_or(text);
+    let base = &text[prefix_len..];
     let mut parts = base.split_whitespace();
     let cmd_name = parts.next().unwrap_or("").to_lowercase();
-    let args: Vec<String> = parts.map(|s| s.to_string()).collect();
+    let args: Vec<&str> = parts.collect();
     let body = base
         .strip_prefix(&cmd_name)
         .unwrap_or("")
@@ -120,13 +116,14 @@ async fn handle_message(
 
     let client_c = Arc::clone(&client);
     let state_c = Arc::clone(&state);
-    let info_c = info.clone();
-    let msg_c = msg.clone();
+    let info_c = Arc::clone(&info);
+    let msg_c = Arc::clone(&msg);
     let config_c = Arc::clone(&config);
     let cmd_name_c = cmd_name.clone();
+    let args_owned: Vec<String> = args.into_iter().map(str::to_owned).collect();
 
     tokio::spawn(async move {
-        let args_ref: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
+        let args_ref: Vec<&str> = args_owned.iter().map(String::as_str).collect();
 
         let ctx = crate::commands::cmd::Context {
             client: Arc::clone(&client_c),

@@ -18,6 +18,7 @@ pub enum ConfigValue {
 pub struct AppState {
     pub http_client: reqwest::Client,
     pub cache: DashMap<String, String>,
+    pub expirations: DashMap<String, u32>,
     pub start_time: Instant,
     pub config: Arc<AppConfig>,
     pub mode: RwLock<BotMode>,
@@ -29,11 +30,13 @@ impl AppState {
     pub fn load(config: Arc<AppConfig>) -> Arc<Self> {
         let start_time = Instant::now();
         let cache = DashMap::new();
+        let expirations = DashMap::new();
         let http_client = reqwest::Client::new();
 
         Arc::new(Self {
             http_client,
             cache,
+            expirations,
             start_time,
             prefixes: RwLock::new(Arc::new(config.prefixes.clone())),
             mode: RwLock::new(config.mode),
@@ -43,15 +46,11 @@ impl AppState {
     }
 
     pub fn set_expiration(&self, jid: String, seconds: u32) {
-        self.cache
-            .insert(format!("exp:{}", jid), seconds.to_string());
+        self.expirations.insert(jid, seconds);
     }
 
     pub fn get_expiration(&self, jid: &str) -> u32 {
-        self.cache
-            .get(&format!("exp:{}", jid))
-            .and_then(|v| v.parse().ok())
-            .unwrap_or(0)
+        self.expirations.get(jid).map(|v| *v).unwrap_or(0)
     }
 
     pub fn get_mode(&self) -> BotMode {
