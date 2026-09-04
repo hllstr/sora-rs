@@ -1,7 +1,7 @@
 prefixes = ['"', "'"]
 session_path = "database/session/whatsapp.db"
 custom_code = "HELLSTAR"
-mode = "self"
-warmup = "normal"
-autoread = "off"
-pairing = "code"
+mode = "self" #self, public
+warmup = "normal" #off, normal
+autoread = "off" #off, all, chat, group
+pairing = "code" #qr, code
