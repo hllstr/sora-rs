@@ -16,9 +16,9 @@ macro_rules! send_msg {
         let expiration = $state.get_expiration(&$dst.to_string());
         let needs_extended = $is_reply || expiration > 0;
         let message = if needs_extended {
-            let mut context = waproto::whatsapp::ContextInfo::default();
+            let mut context = whatsapp_rust::waproto::whatsapp::ContextInfo::default();
             if $is_reply {
-                context = wacore::proto_helpers::build_quote_context_with_info(
+                context = whatsapp_rust::wacore::proto_helpers::build_quote_context_with_info(
                     $info.id.clone(),
                     &$info.source.sender.to_non_ad(),
                     &$info.source.chat,
@@ -34,8 +34,8 @@ macro_rules! send_msg {
 
             context.remote_jid = Some($info.source.chat.to_string());
 
-            waproto::whatsapp::Message {
-                extended_text_message: Some(Box::new(waproto::whatsapp::message::ExtendedTextMessage {
+            whatsapp_rust::waproto::whatsapp::Message {
+                extended_text_message: Some(Box::new(whatsapp_rust::waproto::whatsapp::message::ExtendedTextMessage {
                     text: Some($text.to_string()),
                     context_info: Some(Box::new(context)),
                     ..Default::default()
@@ -43,7 +43,7 @@ macro_rules! send_msg {
                 ..Default::default()
             }
         } else {
-            waproto::whatsapp::Message {
+            whatsapp_rust::waproto::whatsapp::Message {
                 conversation: Some($text.to_string()),
                 ..Default::default()
             }

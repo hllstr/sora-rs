@@ -16,10 +16,6 @@ mimalloc = { version = "0.1.50", optional = true }
 qr2term = "0.3.3"
 tikv-jemallocator = { version = "0.7", optional = true }
 toml = "1.1.2"
-wacore = "0.6"
-waproto = "0.6"
-whatsapp-rust-tokio-transport = "0.6"
-whatsapp-rust-ureq-http-client = "0.6"
 
 [features]
 default = ["stable"]
@@ -45,12 +41,12 @@ version = "1.0.228"
 features = ["derive"]
 
 [dependencies.tokio]
-version = "1.52"
-features = ["macros", "rt-multi-thread", "fs", "process"]
+version = "1.53"
+features = ["macros", "rt-multi-thread", "fs", "process", "signal"]
 
 [dependencies.whatsapp-rust]
-version = "0.6"
-features = ["signal", "sqlite-storage", "tokio-native", "tokio-runtime", "simd", "moka-cache", "ureq-client"]
+version = "0.7"
+features = ["signal", "sqlite-storage", "tokio-native", "tokio-runtime", "simd", "ureq-client"]
 default-features = false
 
 [profile.release]

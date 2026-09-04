@@ -1,7 +1,7 @@
 use crate::{cmd, commands::cmd::Context};
 use std::time::Instant;
 use tokio::net::TcpStream;
-use waproto::whatsapp as wa;
+use whatsapp_rust::waproto::whatsapp as wa;
 
 cmd!(
     Ping,

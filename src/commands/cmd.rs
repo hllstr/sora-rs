@@ -4,10 +4,10 @@ use linkme::distributed_slice;
 use whatsapp_rust::SendResult;
 use std::sync::LazyLock;
 use std::{collections::HashMap, sync::Arc};
-use wacore::types::message::MessageInfo;
-use waproto::whatsapp as wa;
-use waproto::whatsapp::Message;
-use waproto::whatsapp::message::ReactionMessage;
+use whatsapp_rust::wacore::types::message::MessageInfo;
+use whatsapp_rust::waproto::whatsapp as wa;
+use whatsapp_rust::waproto::whatsapp::Message;
+use whatsapp_rust::waproto::whatsapp::message::ReactionMessage;
 use whatsapp_rust::client::Client;
 
 #[derive(Clone)]

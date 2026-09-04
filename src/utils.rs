@@ -2,8 +2,8 @@ use std::process::Stdio;
 use std::sync::Arc;
 use tokio::io::AsyncWriteExt;
 use tokio::process::Command;
-use waproto::whatsapp as wa;
-use waproto::whatsapp::Message;
+use whatsapp_rust::waproto::whatsapp as wa;
+use whatsapp_rust::waproto::whatsapp::Message;
 use whatsapp_rust::Jid;
 use whatsapp_rust::client::Client;
 
@@ -81,7 +81,7 @@ pub fn extract_type_only(msg: &Message) -> String {
         .to_string()
 }
 
-pub fn extract_context(msg: &Message) -> Option<&waproto::whatsapp::ContextInfo> {
+pub fn extract_context(msg: &Message) -> Option<&whatsapp_rust::waproto::whatsapp::ContextInfo> {
     if let Some(ctx) = &msg
         .extended_text_message
         .as_ref()

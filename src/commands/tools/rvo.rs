@@ -1,5 +1,5 @@
 use crate::cmd;
-use waproto::whatsapp as wa;
+use whatsapp_rust::waproto::whatsapp as wa;
 
 cmd!(
     Rvo,

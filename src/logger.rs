@@ -1,7 +1,7 @@
 use crate::utils::MessageExt;
 use crate::utils::{extract_context, extract_type_only};
 use colored::*;
-use waproto::whatsapp::Message;
+use whatsapp_rust::waproto::whatsapp::Message;
 use whatsapp_rust::types::message::MessageInfo;
 
 pub fn dump(info: &MessageInfo, msg: &Message) {

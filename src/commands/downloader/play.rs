@@ -75,8 +75,8 @@ async fn play_audio(ctx: Context<'_>) -> anyhow::Result<()> {
             audio_data: file_path,
             dst: ctx.info.source.chat,
             reply: true,
-            config_context: |context_info: &mut waproto::whatsapp::ContextInfo| {
-                context_info.external_ad_reply = Some(waproto::whatsapp::context_info::ExternalAdReplyInfo {
+            config_context: |context_info: &mut whatsapp_rust::waproto::whatsapp::ContextInfo| {
+                context_info.external_ad_reply = Some(whatsapp_rust::waproto::whatsapp::context_info::ExternalAdReplyInfo {
                     title: Some(title.to_string()),
                     body: Some(channel.to_string()),
                     media_type: Some(1),
@@ -123,8 +123,8 @@ async fn play_audio(ctx: Context<'_>) -> anyhow::Result<()> {
         audio_data: file_path,
         dst: ctx.info.source.chat,
         reply: true,
-        config_context: |context_info: &mut waproto::whatsapp::ContextInfo| {
-            context_info.external_ad_reply = Some(waproto::whatsapp::context_info::ExternalAdReplyInfo {
+        config_context: |context_info: &mut whatsapp_rust::waproto::whatsapp::ContextInfo| {
+            context_info.external_ad_reply = Some(whatsapp_rust::waproto::whatsapp::context_info::ExternalAdReplyInfo {
                 title: Some(title.to_string()),
                 body: Some(channel.to_string()),
                 media_type: Some(1),

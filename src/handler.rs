@@ -8,38 +8,43 @@ use qr2term::print_qr;
 use std::sync::Arc;
 use std::sync::LazyLock;
 use tokio::sync::RwLock;
-use wacore::stanza::GroupNotificationAction;
-use wacore::types::events::GroupUpdate;
-use wacore::types::message::MessageInfo;
-use wacore::{client::context::SendContextResolver, types::events::Event};
+use whatsapp_rust::wacore::stanza::GroupNotificationAction;
+use whatsapp_rust::wacore::types::events::GroupUpdate;
+use whatsapp_rust::wacore::types::events::InboundMessage;
+use whatsapp_rust::wacore::types::events::PairingCode;
+use whatsapp_rust::wacore::types::events::PairingQrCode;
+use whatsapp_rust::wacore::types::message::MessageInfo;
+use whatsapp_rust::wacore::{client::context::SendContextResolver, types::events::Event};
 use whatsapp_rust::client::Client;
 
 static SUPERUSER_LID: LazyLock<RwLock<Vec<String>>> = LazyLock::new(|| RwLock::new(vec![]));
 
 pub async fn event_handler(
-    event: Event,
+    event: Arc<Event>,
     client: Arc<Client>,
     config: Arc<AppConfig>,
     state: Arc<AppState>,
 ) {
-    match event {
+    match &*event {
         Event::Connected(_) => handle_connected(config, client).await,
-        Event::Message(msg, info) => {
-            crate::logger::dump(&info, &msg);
-            handle_message(
-                Arc::unwrap_or_clone(msg),
-                client,
-                config,
-                Arc::unwrap_or_clone(info),
-                state,
-            )
-            .await;
+        Event::Messages(batch) => {
+            for InboundMessage { message, info, .. } in batch.iter() {
+                crate::logger::dump(info, message);
+                handle_message(
+                    message.as_ref().clone(),
+                    Arc::clone(&client),
+                    Arc::clone(&config),
+                    info.as_ref().clone(),
+                    Arc::clone(&state),
+                )
+                .await;
+            }
         }
-        Event::GroupUpdate(update) => handle_group_exp(update, state).await,
-        Event::PairingCode { code, .. } => {
+        Event::GroupUpdate(update) => handle_group_exp(update.clone(), state).await,
+        Event::PairingCode(PairingCode { code, .. }) => {
             println!("Pair code: {}", code);
         }
-        Event::PairingQrCode { code, .. } => {
+        Event::PairingQrCode(PairingQrCode { code, .. }) => {
             if let Err(e) = print_qr(code) {
                 eprintln!("Failed to print QR code: {}", e);
             }
@@ -49,7 +54,7 @@ pub async fn event_handler(
 }
 
 async fn handle_connected(config: Arc<AppConfig>, client: Arc<Client>) {
-    let current_name = client.get_push_name().await;
+    let current_name = client.get_push_name();
     if current_name.is_empty() {
         let _ = client.profile().set_push_name("sora-on-rust").await;
     }
@@ -69,7 +74,7 @@ async fn handle_connected(config: Arc<AppConfig>, client: Arc<Client>) {
 }
 
 async fn handle_message(
-    msg: waproto::whatsapp::Message,
+    msg: whatsapp_rust::waproto::whatsapp::Message,
     client: Arc<Client>,
     config: Arc<AppConfig>,
     info: MessageInfo,

@@ -45,9 +45,9 @@ async fn main() -> anyhow::Result<()> {
 
     let config = Arc::new(config::AppConfig::load()?);
     let state = state::AppState::load(config.clone());
-    let mut bot = client::create_bot(config.clone(), state.clone()).await?;
+    let bot = client::create_bot(config.clone(), state.clone()).await?;
 
-    let bot_handle = bot.run().await?;
+    let bot_handle = bot.spawn();
 
     display_startup(
         config.phone_number.as_str(),
@@ -62,10 +62,9 @@ async fn main() -> anyhow::Result<()> {
     tokio::select! {
         _ = tokio::signal::ctrl_c() => {
             println!("\nSIGINT received, Performing graceful shutdown...");
+            bot_handle.shutdown().await;
         }
-        res = bot_handle => {
-            res?;
-        }
+        _ = bot_handle => {}
     }
     Ok(())
 }

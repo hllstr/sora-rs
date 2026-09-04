@@ -8,9 +8,9 @@ macro_rules! send_audio {
         $(, config_context: $config_fn:expr)?
     ) => {{
         async  {
-            use wacore::proto_helpers::build_quote_context_with_info;
-            use waproto::whatsapp::{Message, message::AudioMessage, ContextInfo};
-            use wacore::download::MediaType;
+            use whatsapp_rust::wacore::proto_helpers::build_quote_context_with_info;
+            use whatsapp_rust::waproto::whatsapp::{Message, message::AudioMessage, ContextInfo};
+            use whatsapp_rust::wacore::download::MediaType;
             use whatsapp_rust::UploadOptions;
 
             let client = &$ctx.client;

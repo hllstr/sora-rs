@@ -1,6 +1,6 @@
 use crate::{cmd, commands::cmd::Context};
 use std::time::Instant;
-use waproto::whatsapp as wa;
+use whatsapp_rust::waproto::whatsapp as wa;
 
 cmd!(
     SpamEdit,
