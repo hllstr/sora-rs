@@ -46,7 +46,7 @@ features = ["macros", "rt-multi-thread", "fs", "process", "signal"]
 
 [dependencies.whatsapp-rust]
 version = "0.7"
-features = ["signal", "sqlite-storage", "tokio-native", "tokio-runtime", "simd", "ureq-client"]
+features = ["signal", "sqlite-storage", "tokio-native", "tokio-runtime", "tokio-transport", "simd", "ureq-client"]
 default-features = false
 
 [profile.release]

@@ -1,3 +1,5 @@
+#![recursion_limit = "256"]
+
 #[cfg(target_os = "windows")]
 compile_error!(
     "Sorry but this program and it's author don't want their code to be compiled in garbage OS like Windogs. Please delete your OS and install linux instead. Tq.\n- hllstr"
