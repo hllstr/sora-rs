@@ -1,5 +1,6 @@
 use crate::config::AppConfig;
 use crate::config::BotMode;
+use crate::config::PairingMethod;
 use crate::config::WarmupMode;
 use crate::state::AppState;
 use crate::utils::MessageExt;
@@ -42,10 +43,14 @@ pub async fn event_handler(
         }
         Event::GroupUpdate(update) => handle_group_exp(update.clone(), state).await,
         Event::PairingCode(PairingCode { code, .. }) => {
-            println!("Pair code: {}", code);
+            if config.pairing == PairingMethod::Code {
+                println!("Pair code: {}", code);
+            }
         }
         Event::PairingQrCode(PairingQrCode { code, .. }) => {
-            if let Err(e) = print_qr(code) {
+            if config.pairing == PairingMethod::Qr
+                && let Err(e) = print_qr(code)
+            {
                 eprintln!("Failed to print QR code: {}", e);
             }
         }
