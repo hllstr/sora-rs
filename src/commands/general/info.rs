@@ -97,12 +97,12 @@ cmd!(
         } else {
             "release"
         };
+        #[cfg(all(feature = "stable", not(feature = "performance"), not(feature = "profiling")))]
+        let allocator = "Jemalloc";
+        #[cfg(all(feature = "performance", not(feature = "profiling")))]
+        let allocator = "mimalloc";
         #[cfg(feature = "profiling")]
         let allocator = "dhat";
-        #[cfg(feature = "stable")]
-        let allocator = "Jemalloc";
-        #[cfg(feature = "performance")]
-        let allocator = "mimalloc";
         let mut categories = HashSet::new();
         for cmd in COMMANDS.iter() {
             categories.insert(cmd.category());
