@@ -22,13 +22,6 @@ jobs:
           - x86_64-unknown-linux-musl
           - aarch64-unknown-linux-gnu
           - aarch64-unknown-linux-musl
-        include:
-          - build_type: stable
-            cargo_flags: "--features stable"
-          - build_type: performance
-            cargo_flags: "--no-default-features --features performance"
-          - build_type: profiling
-            cargo_flags: "--no-default-features --features profiling"
 
     steps:
       - name: Checkout code
@@ -41,29 +34,14 @@ jobs:
           targets: ${{ matrix.target }}
 
       - name: Install cross
-        run: cargo install cross --git https://github.com/cross-rs/cross
+        run: make install-cross
 
       - name: Build Release
-        run: |
-          if [[ "${{ matrix.build_type }}" == "profiling" ]]; then
-            cross build --profile profiling --target ${{ matrix.target }} --no-default-features --features profiling
-          else
-            cross build --release --target ${{ matrix.target }} ${{ matrix.cargo_flags }}
-          fi
-
-      - name: Prepare Binary Name
-        run: |
-          SRC="target/${{ matrix.target }}/release/sora-on-rust"
-          if [[ "${{ matrix.build_type }}" == "profiling" ]]; then
-            SRC="target/${{ matrix.target }}/profiling/sora-on-rust"
-          fi
-          DEST="sora-on-rust-${{ matrix.build_type }}-${{ matrix.target }}"
-          mv "$SRC" "$DEST"
-          echo "BIN_PATH=$DEST" >> "$GITHUB_ENV"
+        run: make BUILD_TYPE=${{ matrix.build_type }} TARGET=${{ matrix.target }}
 
       - name: Upload Binary to Release
         uses: softprops/action-gh-release@v2
         with:
-          files: ${{ env.BIN_PATH }}
+          files: sora-on-rust-${{ matrix.build_type }}-${{ matrix.target }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
