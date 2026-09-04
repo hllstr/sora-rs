@@ -32,6 +32,10 @@ cmd!(
                 let _ = ctx.state.set_config(ConfigKey::Warmup, ConfigValue::Text(val_str.clone()));
                 ctx.react("✅️").await?;
             },
+            "autoread" => {
+                let _ = ctx.state.set_config(ConfigKey::Autoread, ConfigValue::Text(val_str.clone()));
+                ctx.react("✅️").await?;
+            },
             _ => {
                 ctx.react("❔").await?;
                 return Ok(());
@@ -47,6 +51,7 @@ cmd!(
                 session_path: state.config.session_path.clone(),
                 pairing: state.config.pairing,
                 warmup: state.get_warmup(),
+                autoread: state.get_autoread(),
                 mode: state.get_mode(),
                 prefixes: state.get_prefixes().to_vec(),
             };
