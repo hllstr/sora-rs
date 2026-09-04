@@ -1,3 +1,5 @@
+#![recursion_limit = "256"]
+
 #[cfg(target_os = "windows")]
 compile_error!(
     "Sorry but this program and it's author don't want their code to be compiled in garbage OS like Windogs. Please delete your OS and install linux instead. Tq.\n- hllstr"
@@ -45,9 +47,9 @@ async fn main() -> anyhow::Result<()> {
 
     let config = Arc::new(config::AppConfig::load()?);
     let state = state::AppState::load(config.clone());
-    let mut bot = client::create_bot(config.clone(), state.clone()).await?;
+    let bot = client::create_bot(config.clone(), state.clone()).await?;
 
-    let bot_handle = bot.run().await?;
+    let mut bot_handle = bot.spawn();
 
     display_startup(
         config.phone_number.as_str(),
@@ -62,10 +64,9 @@ async fn main() -> anyhow::Result<()> {
     tokio::select! {
         _ = tokio::signal::ctrl_c() => {
             println!("\nSIGINT received, Performing graceful shutdown...");
+            bot_handle.shutdown().await;
         }
-        res = bot_handle => {
-            res?;
-        }
+        _ = &mut bot_handle => {}
     }
     Ok(())
 }

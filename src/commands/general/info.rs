@@ -9,8 +9,10 @@ fn format_kb_to_mb(kb_str: String) -> String {
         .next()
         .and_then(|v| v.parse::<f64>().ok())
         .unwrap_or(0.0);
-    
-    if kb == 0.0 { return "0MB".to_string(); }
+
+    if kb == 0.0 {
+        return "0MB".to_string();
+    }
     format!("{:.0}MB", kb / 1024.0)
 }
 
@@ -90,7 +92,11 @@ cmd!(
         let app_name = env!("CARGO_PKG_NAME");
         let app_version = env!("CARGO_PKG_VERSION");
         let compiler = option_env!("RUSTC_VERSION").unwrap_or("Rustc (Stable)");
-        let build_profile = if cfg!(debug_assertions) { "debug" } else { "release" };
+        let build_profile = if cfg!(debug_assertions) {
+            "debug"
+        } else {
+            "release"
+        };
         #[cfg(feature = "profiling")]
         let allocator = "dhat";
         #[cfg(feature = "stable")]
@@ -105,7 +111,8 @@ cmd!(
         let cpu_brand = get_proc_value("/proc/cpuinfo", "model name");
         let cpu_info = fs::read_to_string("/proc/cpuinfo").unwrap_or_default();
         let logical_cores = cpu_info.lines().filter(|l| l.starts_with("processor")).count();
-        let physical_cores = cpu_info.lines()
+        let physical_cores = cpu_info
+            .lines()
             .find(|l| l.starts_with("cpu cores"))
             .and_then(|l| l.split(':').nth(1))
             .and_then(|v| v.trim().parse::<usize>().ok())
@@ -124,13 +131,27 @@ cmd!(
         let mut vmexe = "0 KB".to_string();
 
         for line in status_raw.lines() {
-            if line.starts_with("VmRSS:") { rss = format_kb_to_mb(line.split(':').nth(1).unwrap().trim().to_string()); }
-            if line.starts_with("VmHWM:") { hwm = format_kb_to_mb(line.split(':').nth(1).unwrap().trim().to_string()); }
-            if line.starts_with("VmSize:") { vmsize = format_kb_to_mb(line.split(':').nth(1).unwrap().trim().to_string()); }
-            if line.starts_with("VmSwap:") { vmswap = format_kb_to_mb(line.split(':').nth(1).unwrap().trim().to_string()); }
-            if line.starts_with("VmData:") { vmdata = format_kb_to_mb(line.split(':').nth(1).unwrap().trim().to_string()); }
-            if line.starts_with("VmExe:") { vmexe = format_kb_to_mb(line.split(':').nth(1).unwrap().trim().to_string()); }
-            if line.starts_with("Threads:") { threads = line.split(':').nth(1).unwrap().trim().to_string(); }
+            if line.starts_with("VmRSS:") {
+                rss = format_kb_to_mb(line.split(':').nth(1).unwrap().trim().to_string());
+            }
+            if line.starts_with("VmHWM:") {
+                hwm = format_kb_to_mb(line.split(':').nth(1).unwrap().trim().to_string());
+            }
+            if line.starts_with("VmSize:") {
+                vmsize = format_kb_to_mb(line.split(':').nth(1).unwrap().trim().to_string());
+            }
+            if line.starts_with("VmSwap:") {
+                vmswap = format_kb_to_mb(line.split(':').nth(1).unwrap().trim().to_string());
+            }
+            if line.starts_with("VmData:") {
+                vmdata = format_kb_to_mb(line.split(':').nth(1).unwrap().trim().to_string());
+            }
+            if line.starts_with("VmExe:") {
+                vmexe = format_kb_to_mb(line.split(':').nth(1).unwrap().trim().to_string());
+            }
+            if line.starts_with("Threads:") {
+                threads = line.split(':').nth(1).unwrap().trim().to_string();
+            }
         }
 
         let runtime_secs = ctx.state.start_time.elapsed().as_secs();

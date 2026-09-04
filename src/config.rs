@@ -27,6 +27,13 @@ pub enum WarmupMode {
     Off,
 }
 
+#[derive(Debug, Deserialize, Serialize, Clone, Copy, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum PairingMethod {
+    Qr,
+    Code,
+}
+
 #[derive(Deserialize, Serialize, Clone)]
 pub struct AppConfig {
     pub prefixes: Vec<String>,
@@ -34,6 +41,7 @@ pub struct AppConfig {
     pub custom_code: String,
     pub mode: BotMode,
     pub warmup: WarmupMode,
+    pub pairing: PairingMethod,
     #[serde(skip)]
     pub phone_number: String,
     #[serde(skip)]

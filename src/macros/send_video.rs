@@ -9,9 +9,9 @@ macro_rules! send_video {
         $(, config_context: $config_fn:expr)?
     ) => {
         async {
-            use wacore::proto_helpers::build_quote_context_with_info;
-            use waproto::whatsapp::{Message, message::VideoMessage, ContextInfo};
-            use wacore::download::MediaType;
+            use whatsapp_rust::wacore::proto_helpers::build_quote_context_with_info;
+            use whatsapp_rust::waproto::whatsapp::{Message, message::VideoMessage, ContextInfo};
+            use whatsapp_rust::wacore::download::MediaType;
             use std::sync::Arc;
             use whatsapp_rust::UploadOptions;
 
@@ -28,6 +28,7 @@ macro_rules! send_video {
                 let mut ctx_info = build_quote_context_with_info(
                     &info.id,
                     &info.source.sender,
+                    &info.source.chat,
                     &info.source.chat,
                     $ctx.msg,
                 );
@@ -49,7 +50,7 @@ macro_rules! send_video {
             context_info.remote_jid = Some(info.source.chat.to_string());
 
             let video_msg = Message {
-                video_message: Some(Box::new(VideoMessage {
+                video_message: whatsapp_rust::buffa::MessageField::some(VideoMessage {
                     url: Some(upload.url),
                     direct_path: Some(upload.direct_path),
                     media_key: Some(upload.media_key.to_vec()),
@@ -59,9 +60,9 @@ macro_rules! send_video {
                     mimetype: Some("video/mp4".to_string()),
                     caption: Some($caption.to_string()),
                     jpeg_thumbnail: thumbnail_bytes,
-                    context_info: Some(Box::new(context_info)),
+                    context_info: whatsapp_rust::buffa::MessageField::some(context_info),
                     ..Default::default()
-                })),
+                }),
                 ..Default::default()
             };
 

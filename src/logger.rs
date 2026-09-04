@@ -1,11 +1,11 @@
 use crate::utils::MessageExt;
 use crate::utils::{extract_context, extract_type_only};
 use colored::*;
-use waproto::whatsapp::Message;
+use whatsapp_rust::waproto::whatsapp::Message;
 use whatsapp_rust::types::message::MessageInfo;
 
 pub fn dump(info: &MessageInfo, msg: &Message) {
-    let (msg_type, _) = extract_type_only(msg);
+    let msg_type = extract_type_only(msg);
     let body = msg.text_content().cloned().unwrap_or_default();
 
     println!();
@@ -47,12 +47,12 @@ pub fn dump(info: &MessageInfo, msg: &Message) {
             println!("Expiration  : {}s", exp.to_string().yellow());
         }
 
-        if let Some(quoted) = &ctx.quoted_message {
+        if let Some(quoted) = ctx.quoted_message.as_option() {
             let q_body = quoted
                 .text_content()
                 .cloned()
                 .unwrap_or_else(|| "None".to_string());
-            let (q_type, _) = extract_type_only(quoted);
+            let q_type = extract_type_only(quoted);
             println!("Quoted [{}]: {}", q_type.bright_magenta(), q_body.white());
         }
         println!("{}", "--------------------".blue());

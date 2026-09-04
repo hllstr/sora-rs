@@ -8,9 +8,9 @@ macro_rules! send_audio {
         $(, config_context: $config_fn:expr)?
     ) => {{
         async  {
-            use wacore::proto_helpers::build_quote_context_with_info;
-            use waproto::whatsapp::{Message, message::AudioMessage, ContextInfo};
-            use wacore::download::MediaType;
+            use whatsapp_rust::wacore::proto_helpers::build_quote_context_with_info;
+            use whatsapp_rust::waproto::whatsapp::{Message, message::AudioMessage, ContextInfo};
+            use whatsapp_rust::wacore::download::MediaType;
             use whatsapp_rust::UploadOptions;
 
             let client = &$ctx.client;
@@ -25,6 +25,7 @@ macro_rules! send_audio {
                 let mut ctx_info = build_quote_context_with_info(
                     &info.id,
                     &info.source.sender,
+                    &info.source.chat,
                     &info.source.chat,
                     $ctx.msg,
                 );
@@ -46,7 +47,7 @@ macro_rules! send_audio {
             context_info.remote_jid = Some($ctx.info.source.chat.to_string());
 
             let audio_msg = Message {
-                audio_message: Some(Box::new(AudioMessage {
+                audio_message: whatsapp_rust::buffa::MessageField::some(AudioMessage {
                     url: Some(upload.url),
                     direct_path: Some(upload.direct_path),
                     media_key: Some(upload.media_key.to_vec()),
@@ -54,9 +55,9 @@ macro_rules! send_audio {
                     file_enc_sha256: Some(upload.file_enc_sha256.to_vec()),
                     file_length: Some(upload.file_length),
                     mimetype: Some("audio/mpeg".to_string()),
-                    context_info: Some(Box::new(context_info)),
+                    context_info: whatsapp_rust::buffa::MessageField::some(context_info),
                     ..Default::default()
-                })),
+                }),
                 ..Default::default()
             };
 

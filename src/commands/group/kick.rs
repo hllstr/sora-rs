@@ -1,6 +1,6 @@
+use crate::cmd;
 use rand::seq::IndexedRandom;
 use whatsapp_rust::Jid;
-use crate::cmd;
 
 cmd!(
     Kick,
@@ -9,8 +9,8 @@ cmd!(
     category: "group",
     execute: |ctx| {
         let mut targets: Vec<Jid> = Vec::new();
-        if let Some(ext_msg) = &ctx.msg.extended_text_message
-            && let Some(context) = &ext_msg.context_info {
+        if let Some(ext_msg) = ctx.msg.extended_text_message.as_option()
+            && let Some(context) = ext_msg.context_info.as_option() {
                 if ctx.args.is_empty() {
                     if let Some(participant) = &context.participant
                         && let Ok(jid) = participant.parse::<Jid>() {
@@ -29,7 +29,7 @@ cmd!(
 
         if ctx.body == "random" {
             let info = ctx.client.groups().query_info(&ctx.info.source.chat).await?;
-            let participants = info.participants;
+            let participants = &info.participants;
             if let Some(random_jid) = participants.choose(&mut rand::rng()) {
                 targets.push(random_jid.clone());
             }

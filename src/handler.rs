@@ -1,5 +1,6 @@
 use crate::config::AppConfig;
 use crate::config::BotMode;
+use crate::config::PairingMethod;
 use crate::config::WarmupMode;
 use crate::state::AppState;
 use crate::utils::MessageExt;
@@ -8,49 +9,57 @@ use qr2term::print_qr;
 use std::sync::Arc;
 use std::sync::LazyLock;
 use tokio::sync::RwLock;
-use wacore::stanza::GroupNotificationAction;
-use wacore::types::events::GroupUpdate;
-use wacore::types::message::MessageInfo;
-use wacore::{client::context::SendContextResolver, types::events::Event};
+use whatsapp_rust::wacore::stanza::GroupNotificationAction;
+use whatsapp_rust::wacore::types::events::GroupUpdate;
+use whatsapp_rust::wacore::types::events::InboundMessage;
+use whatsapp_rust::wacore::types::events::PairingCode;
+use whatsapp_rust::wacore::types::events::PairingQrCode;
+use whatsapp_rust::wacore::types::message::MessageInfo;
+use whatsapp_rust::wacore::{client::context::SendContextResolver, types::events::Event};
 use whatsapp_rust::client::Client;
 
 static SUPERUSER_LID: LazyLock<RwLock<Vec<String>>> = LazyLock::new(|| RwLock::new(vec![]));
 
 pub async fn event_handler(
-    event: Event,
+    event: Arc<Event>,
     client: Arc<Client>,
     config: Arc<AppConfig>,
     state: Arc<AppState>,
 ) {
-    match event {
+    match &*event {
         Event::Connected(_) => handle_connected(config, client).await,
-        Event::Message(msg, info) => {
-            crate::logger::dump(&info, &msg);
-            handle_message(
-                Arc::unwrap_or_clone(msg),
-                client,
-                config,
-                Arc::unwrap_or_clone(info),
-                state,
-            )
-            .await;
-        }
-        Event::GroupUpdate(update) => handle_group_exp(update, state).await,
-        Event::PairingCode { code, .. } => {
-            println!("Pair code: {}", code);
-        },
-        Event::PairingQrCode { code, .. } => {
-            match print_qr(code) {
-                Ok(_) => (),
-                Err(e) => eprintln!("Failed to print QR code: {}", e),
+        Event::Messages(batch) => {
+            for InboundMessage { message, info, .. } in batch.iter() {
+                crate::logger::dump(info, message);
+                handle_message(
+                    message.as_ref().clone(),
+                    Arc::clone(&client),
+                    Arc::clone(&config),
+                    info.as_ref().clone(),
+                    Arc::clone(&state),
+                )
+                .await;
             }
-        },
+        }
+        Event::GroupUpdate(update) => handle_group_exp(update.clone(), state).await,
+        Event::PairingCode(PairingCode { code, .. }) => {
+            if config.pairing == PairingMethod::Code {
+                println!("Pair code: {}", code);
+            }
+        }
+        Event::PairingQrCode(PairingQrCode { code, .. }) => {
+            if config.pairing == PairingMethod::Qr
+                && let Err(e) = print_qr(code)
+            {
+                eprintln!("Failed to print QR code: {}", e);
+            }
+        }
         _ => {}
     }
 }
 
 async fn handle_connected(config: Arc<AppConfig>, client: Arc<Client>) {
-    let current_name = client.get_push_name().await;
+    let current_name = client.push_name();
     if current_name.is_empty() {
         let _ = client.profile().set_push_name("sora-on-rust").await;
     }
@@ -59,18 +68,6 @@ async fn handle_connected(config: Arc<AppConfig>, client: Arc<Client>) {
     let mut lids = vec![];
     for su_pn in &config.superuser {
         let found_lid = client.get_lid_for_phone(su_pn).await.map(|j| j.to_string());
-        if found_lid.is_none() {
-            // match client.contacts().(&[su_pn.as_str()]).await {
-            //     Ok(contacts) => {
-            //         if let Some(contact) = contacts.into_iter().next()
-            //             && let Some(lid) = contact.lid
-            //         {
-            //             found_lid = Some(lid.user);
-            //         }
-            //     }
-            //     Err(e) => eprintln!("Unable retrieve contact info from server: {}", e),
-            // }
-        }
         if let Some(lid) = found_lid {
             lids.push(lid);
         } else {
@@ -82,7 +79,7 @@ async fn handle_connected(config: Arc<AppConfig>, client: Arc<Client>) {
 }
 
 async fn handle_message(
-    msg: waproto::whatsapp::Message,
+    msg: whatsapp_rust::waproto::whatsapp::Message,
     client: Arc<Client>,
     config: Arc<AppConfig>,
     info: MessageInfo,
@@ -159,22 +156,9 @@ async fn handle_message(
                     return;
                 }
 
-                if cmd.category() == "group"
-                    && !info_c.source.is_group {
-                        return;
-                    }
-                    // if let Ok(metadata) = client_c.groups().get_metadata(&info_c.source.chat).await
-                    // {
-                    //     let is_admin = metadata
-                    //         .participants
-                    //         .iter()
-                    //         .any(|p| p.jid.user == info_c.source.sender.user && p.is_admin);
-                    //     if !is_admin {
-                    //         return;
-                    //     }
-                    // } else {
-                    //     return;
-                    // }
+                if cmd.category() == "group" && !info_c.source.is_group {
+                    return;
+                }
 
                 let _ = client_c
                     .chatstate()
@@ -185,15 +169,12 @@ async fn handle_message(
                 }
                 let _ = client_c.chatstate().send_paused(&info_c.source.chat).await;
             }
-        } else {
-            if state_c.get_warmup() != WarmupMode::Off {
-                let chat_jid = info_c.source.chat.clone();
-                let msg_id = info_c.id.clone();
-                let sender_jid = info_c.source.sender.to_string();
+        } else if state_c.get_warmup() != WarmupMode::Off {
+            let chat_jid = info_c.source.chat.clone();
+            let msg_id = info_c.id.clone();
+            let sender_jid = info_c.source.sender.to_string();
 
-                let _ =
-                    crate::utils::send_warmup(client_c, chat_jid, msg_id, Some(sender_jid)).await;
-            }
+            let _ = crate::utils::send_warmup(client_c, chat_jid, msg_id, Some(sender_jid)).await;
         }
     });
 }

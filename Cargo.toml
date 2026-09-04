@@ -14,12 +14,8 @@ libc = "0.2.186"
 linkme = "0.3.36"
 mimalloc = { version = "0.1.50", optional = true }
 qr2term = "0.3.3"
-tikv-jemallocator = { version = "0.6.1", optional = true }
+tikv-jemallocator = { version = "0.7", optional = true }
 toml = "1.1.2"
-wacore = "0.6"
-waproto = "0.6"
-whatsapp-rust-tokio-transport = "0.6"
-whatsapp-rust-ureq-http-client = "0.6"
 
 [features]
 default = ["stable"]
@@ -36,6 +32,9 @@ features = ["serde"]
 version = "0.10.1"
 features = ["std"]
 
+[dependencies.http]
+version = "1.5"
+
 [dependencies.reqwest]
 version = "0.13.2"
 features = ["json"]
@@ -45,12 +44,12 @@ version = "1.0.228"
 features = ["derive"]
 
 [dependencies.tokio]
-version = "1.52"
-features = ["macros", "rt-multi-thread", "fs", "process"]
+version = "1.53"
+features = ["macros", "rt-multi-thread", "fs", "process", "signal"]
 
 [dependencies.whatsapp-rust]
-version = "0.6"
-features = ["signal", "sqlite-storage", "tokio-native", "tokio-runtime", "simd", "moka-cache", "ureq-client"]
+version = "0.7"
+features = ["signal", "sqlite-storage", "tokio-native", "tokio-runtime", "tokio-transport", "simd", "ureq-client"]
 default-features = false
 
 [profile.release]
