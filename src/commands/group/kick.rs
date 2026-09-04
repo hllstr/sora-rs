@@ -29,7 +29,7 @@ cmd!(
 
         if ctx.body == "random" {
             let info = ctx.client.groups().query_info(&ctx.info.source.chat).await?;
-            let participants = info.participants;
+            let participants = &info.participants;
             if let Some(random_jid) = participants.choose(&mut rand::rng()) {
                 targets.push(random_jid.clone());
             }

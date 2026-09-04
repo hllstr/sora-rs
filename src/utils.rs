@@ -180,8 +180,8 @@ pub async fn send_warmup(
 ) -> anyhow::Result<()> {
     println!("Sending warmup message");
     let warmup_msg = wa::Message {
-        reaction_message: buffa::MessageField::some(wa::message::ReactionMessage {
-            key: buffa::MessageField::some(wa::MessageKey {
+        reaction_message: whatsapp_rust::buffa::MessageField::some(wa::message::ReactionMessage {
+            key: whatsapp_rust::buffa::MessageField::some(wa::MessageKey {
                 remote_jid: Some(chat_jid.to_string()),
                 from_me: Some(false),
                 id: Some(msg_id),

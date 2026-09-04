@@ -47,7 +47,7 @@ macro_rules! send_audio {
             context_info.remote_jid = Some($ctx.info.source.chat.to_string());
 
             let audio_msg = Message {
-                audio_message: buffa::MessageField::some(AudioMessage {
+                audio_message: whatsapp_rust::buffa::MessageField::some(AudioMessage {
                     url: Some(upload.url),
                     direct_path: Some(upload.direct_path),
                     media_key: Some(upload.media_key.to_vec()),
@@ -55,7 +55,7 @@ macro_rules! send_audio {
                     file_enc_sha256: Some(upload.file_enc_sha256.to_vec()),
                     file_length: Some(upload.file_length),
                     mimetype: Some("audio/mpeg".to_string()),
-                    context_info: buffa::MessageField::some(context_info),
+                    context_info: whatsapp_rust::buffa::MessageField::some(context_info),
                     ..Default::default()
                 }),
                 ..Default::default()

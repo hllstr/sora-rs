@@ -23,8 +23,8 @@ pub struct Context<'a> {
 impl<'a> Context<'a> {
     pub async fn react(&self, emoji: &str) -> anyhow::Result<SendResult> {
         let reaction = wa::Message {
-            reaction_message: buffa::MessageField::some(ReactionMessage {
-                key: buffa::MessageField::some(wa::MessageKey {
+            reaction_message: whatsapp_rust::buffa::MessageField::some(ReactionMessage {
+                key: whatsapp_rust::buffa::MessageField::some(wa::MessageKey {
                     remote_jid: Some(self.info.source.chat.to_string()),
                     from_me: Some(false),
                     id: Some(self.info.id.to_string()),

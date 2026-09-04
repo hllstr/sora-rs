@@ -17,7 +17,7 @@ cmd!(
         };
 
         let current_expiration = ctx.state.get_expiration(&ctx.info.source.chat.to_string());
-        let apply_expiration = |context_info: &mut buffa::MessageField<wa::ContextInfo>| {
+        let apply_expiration = |context_info: &mut whatsapp_rust::buffa::MessageField<wa::ContextInfo>| {
             if current_expiration > 0 {
                 context_info.get_or_insert_default().expiration = Some(current_expiration);
             }

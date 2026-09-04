@@ -47,8 +47,7 @@ async fn main() -> anyhow::Result<()> {
     let state = state::AppState::load(config.clone());
     let bot = client::create_bot(config.clone(), state.clone()).await?;
 
-    let mut bot = bot;
-    let bot_handle = bot.run().await?;
+    let mut bot_handle = bot.spawn();
 
     display_startup(
         config.phone_number.as_str(),
@@ -60,7 +59,6 @@ async fn main() -> anyhow::Result<()> {
         state.get_prefixes().to_vec(),
     );
 
-    let mut bot_handle = bot_handle;
     tokio::select! {
         _ = tokio::signal::ctrl_c() => {
             println!("\nSIGINT received, Performing graceful shutdown...");

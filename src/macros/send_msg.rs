@@ -36,9 +36,9 @@ macro_rules! send_msg {
             context.remote_jid = Some($info.source.chat.to_string());
 
             whatsapp_rust::waproto::whatsapp::Message {
-                extended_text_message: buffa::MessageField::some(whatsapp_rust::waproto::whatsapp::message::ExtendedTextMessage {
+                extended_text_message: whatsapp_rust::buffa::MessageField::some(whatsapp_rust::waproto::whatsapp::message::ExtendedTextMessage {
                     text: Some($text.to_string()),
-                    context_info: buffa::MessageField::some(context),
+                    context_info: whatsapp_rust::buffa::MessageField::some(context),
                     ..Default::default()
                 }),
                 ..Default::default()
