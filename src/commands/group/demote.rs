@@ -27,13 +27,13 @@ cmd!(
             ctx.react("❔").await?;
             return Ok(());
         }
-        println!("{:?}", targets);
+        crate::logger::info("demote", format!("targets: {:?}", targets));
         match ctx.client.groups().demote_participants(&ctx.info.source.chat, &targets).await {
             Ok(_) => {
                 ctx.react("✅").await?;
             }
             Err(e) => {
-                eprintln!("err: {}", e);
+                crate::logger::error("demote", e);
                 ctx.react("❌").await?;
             }
         }

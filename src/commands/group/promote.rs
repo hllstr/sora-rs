@@ -27,13 +27,13 @@ cmd!(
             ctx.react("❔").await?;
             return Ok(());
         }
-        println!("{:?}", targets);
+        crate::logger::info("promote", format!("targets: {:?}", targets));
         match ctx.client.groups().promote_participants(&ctx.info.source.chat, &targets).await {
             Ok(_) => {
                 ctx.react("✅").await?;
             }
             Err(e) => {
-                eprintln!("err: {}", e);
+                crate::logger::error("promote", e);
                 ctx.react("❌").await?;
             }
         }

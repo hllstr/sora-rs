@@ -46,14 +46,14 @@ pub async fn event_handler(
         Event::GroupUpdate(update) => handle_group_exp(update.clone(), state).await,
         Event::PairingCode(PairingCode { code, .. }) => {
             if config.pairing == PairingMethod::Code {
-                println!("Pair code: {}", code);
+                crate::logger::info("pairing", format!("pair code: {}", code));
             }
         }
         Event::PairingQrCode(PairingQrCode { code, .. }) => {
             if config.pairing == PairingMethod::Qr
                 && let Err(e) = print_qr(code)
             {
-                eprintln!("Failed to print QR code: {}", e);
+                crate::logger::error("pairing", format!("failed to print QR code: {}", e));
             }
         }
         _ => {}
@@ -73,7 +73,7 @@ async fn handle_connected(config: Arc<AppConfig>, client: Arc<Client>) {
         if let Some(lid) = found_lid {
             lids.push(lid);
         } else {
-            eprintln!("Unable to get LID for superuser: {}", su_pn);
+            crate::logger::warn("startup", format!("unable to get LID for superuser: {}", su_pn));
         }
     }
     let mut lock = SUPERUSER_LID.write().await;
@@ -166,7 +166,7 @@ async fn handle_message(
                     .send_composing(&info_c.source.chat)
                     .await;
                 if let Err(e) = cmd.execute(ctx).await {
-                    eprintln!("Command error: {}", e);
+                    crate::logger::error(&cmd_name_c, format!("command error: {}", e));
                 }
                 let _ = client_c.chatstate().send_paused(&info_c.source.chat).await;
             }

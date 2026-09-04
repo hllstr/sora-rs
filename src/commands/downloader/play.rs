@@ -41,10 +41,10 @@ async fn play_audio(ctx: Context<'_>) -> anyhow::Result<()> {
     let raw_metadata: String;
     let metadata_path = format!("downloads/{}.txt", cache_key(&input));
     if Path::new(&metadata_path).exists() {
-        println!("metadata cache hit!, skipping metadata fetch.");
+        crate::logger::info("play", "metadata cache hit, skipping fetch");
         raw_metadata = tokio::fs::read_to_string(&metadata_path).await?;
     } else {
-        println!("metadata cache miss, fetching metadata...");
+        crate::logger::info("play", "metadata cache miss, fetching...");
         let mut metadata_cmd = Command::new("yt-dlp");
         metadata_cmd.env_remove("NODE_CHANNEL_FD").args([
             "--print",
@@ -87,7 +87,7 @@ async fn play_audio(ctx: Context<'_>) -> anyhow::Result<()> {
     let file_path = format!("downloads/{}.mp3", video_id);
 
     if Path::new(&file_path).exists() {
-        println!("cache hit!, skipping download.");
+        crate::logger::info("play", "audio cache hit, skipping download");
         ctx.react("✅").await?;
         send_audio!(
             context: ctx,

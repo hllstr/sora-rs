@@ -178,7 +178,7 @@ pub async fn send_warmup(
     msg_id: String,
     participant: Option<String>,
 ) -> anyhow::Result<()> {
-    println!("Sending warmup message");
+    crate::logger::info("warmup", "sending warmup message");
     let warmup_msg = wa::Message {
         reaction_message: whatsapp_rust::buffa::MessageField::some(wa::message::ReactionMessage {
             key: whatsapp_rust::buffa::MessageField::some(wa::MessageKey {

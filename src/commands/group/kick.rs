@@ -25,7 +25,7 @@ cmd!(
                 }
             }
 
-        println!("{:?}", targets);
+        crate::logger::info("kick", format!("targets: {:?}", targets));
 
         if ctx.body == "random" {
             let info = ctx.client.groups().query_info(&ctx.info.source.chat).await?;
@@ -43,7 +43,7 @@ cmd!(
                 ctx.react("💥").await?;
             }
             Err(e) => {
-                eprintln!("err: {}", e);
+                crate::logger::error("kick", e);
                 ctx.react("❌").await?;
             }
         }
