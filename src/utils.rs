@@ -71,15 +71,14 @@ impl MessageExt for Message {
     }
 }
 
-pub fn extract_type_only(msg: &Message) -> (String, String) {
+pub fn extract_type_only(msg: &Message) -> String {
     let debug_str = format!("{:?}", msg);
-    let raw_type = debug_str
+    debug_str
         .split(": Some(")
         .next()
         .and_then(|s| s.split_whitespace().last())
         .unwrap_or("unknown")
-        .to_string();
-    (raw_type, String::new())
+        .to_string()
 }
 
 pub fn extract_context(msg: &Message) -> Option<&waproto::whatsapp::ContextInfo> {

@@ -5,7 +5,7 @@ use waproto::whatsapp::Message;
 use whatsapp_rust::types::message::MessageInfo;
 
 pub fn dump(info: &MessageInfo, msg: &Message) {
-    let (msg_type, _) = extract_type_only(msg);
+    let msg_type = extract_type_only(msg);
     let body = msg.text_content().cloned().unwrap_or_default();
 
     println!();
@@ -52,7 +52,7 @@ pub fn dump(info: &MessageInfo, msg: &Message) {
                 .text_content()
                 .cloned()
                 .unwrap_or_else(|| "None".to_string());
-            let (q_type, _) = extract_type_only(quoted);
+            let q_type = extract_type_only(quoted);
             println!("Quoted [{}]: {}", q_type.bright_magenta(), q_body.white());
         }
         println!("{}", "--------------------".blue());

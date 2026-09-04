@@ -1,5 +1,5 @@
-use whatsapp_rust::Jid;
 use crate::cmd;
+use whatsapp_rust::Jid;
 
 cmd!(
     Promote,

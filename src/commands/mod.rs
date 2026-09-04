@@ -9,7 +9,6 @@ pub mod general {
     pub mod ping;
 }
 pub mod group {
-    pub mod add;
     pub mod demote;
     pub mod gc;
     pub mod kick;
@@ -21,9 +20,6 @@ pub mod root {
     pub mod exec;
     pub mod set;
     pub mod spamedit;
-}
-pub mod testing {
-    pub mod button;
 }
 pub mod tools {
     pub mod debug;

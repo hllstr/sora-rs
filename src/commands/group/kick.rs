@@ -1,6 +1,6 @@
+use crate::cmd;
 use rand::seq::IndexedRandom;
 use whatsapp_rust::Jid;
-use crate::cmd;
 
 cmd!(
     Kick,

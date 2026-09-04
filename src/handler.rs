@@ -38,13 +38,12 @@ pub async fn event_handler(
         Event::GroupUpdate(update) => handle_group_exp(update, state).await,
         Event::PairingCode { code, .. } => {
             println!("Pair code: {}", code);
-        },
+        }
         Event::PairingQrCode { code, .. } => {
-            match print_qr(code) {
-                Ok(_) => (),
-                Err(e) => eprintln!("Failed to print QR code: {}", e),
+            if let Err(e) = print_qr(code) {
+                eprintln!("Failed to print QR code: {}", e);
             }
-        },
+        }
         _ => {}
     }
 }
@@ -59,18 +58,6 @@ async fn handle_connected(config: Arc<AppConfig>, client: Arc<Client>) {
     let mut lids = vec![];
     for su_pn in &config.superuser {
         let found_lid = client.get_lid_for_phone(su_pn).await.map(|j| j.to_string());
-        if found_lid.is_none() {
-            // match client.contacts().(&[su_pn.as_str()]).await {
-            //     Ok(contacts) => {
-            //         if let Some(contact) = contacts.into_iter().next()
-            //             && let Some(lid) = contact.lid
-            //         {
-            //             found_lid = Some(lid.user);
-            //         }
-            //     }
-            //     Err(e) => eprintln!("Unable retrieve contact info from server: {}", e),
-            // }
-        }
         if let Some(lid) = found_lid {
             lids.push(lid);
         } else {
@@ -159,22 +146,9 @@ async fn handle_message(
                     return;
                 }
 
-                if cmd.category() == "group"
-                    && !info_c.source.is_group {
-                        return;
-                    }
-                    // if let Ok(metadata) = client_c.groups().get_metadata(&info_c.source.chat).await
-                    // {
-                    //     let is_admin = metadata
-                    //         .participants
-                    //         .iter()
-                    //         .any(|p| p.jid.user == info_c.source.sender.user && p.is_admin);
-                    //     if !is_admin {
-                    //         return;
-                    //     }
-                    // } else {
-                    //     return;
-                    // }
+                if cmd.category() == "group" && !info_c.source.is_group {
+                    return;
+                }
 
                 let _ = client_c
                     .chatstate()
@@ -185,15 +159,12 @@ async fn handle_message(
                 }
                 let _ = client_c.chatstate().send_paused(&info_c.source.chat).await;
             }
-        } else {
-            if state_c.get_warmup() != WarmupMode::Off {
-                let chat_jid = info_c.source.chat.clone();
-                let msg_id = info_c.id.clone();
-                let sender_jid = info_c.source.sender.to_string();
+        } else if state_c.get_warmup() != WarmupMode::Off {
+            let chat_jid = info_c.source.chat.clone();
+            let msg_id = info_c.id.clone();
+            let sender_jid = info_c.source.sender.to_string();
 
-                let _ =
-                    crate::utils::send_warmup(client_c, chat_jid, msg_id, Some(sender_jid)).await;
-            }
+            let _ = crate::utils::send_warmup(client_c, chat_jid, msg_id, Some(sender_jid)).await;
         }
     });
 }

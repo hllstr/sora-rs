@@ -70,11 +70,6 @@ impl AppState {
         self.cache.insert(key.to_string(), value.to_string());
     }
 
-    // not used yet, but someday I'll be uncommenting this
-    // pub fn get_cache(&self, key: &str) -> Option<String> {
-    //     self.cache.get(key).map(|v| v.value().clone())
-    // }
-
     pub fn has_cache(&self, key: &str) -> bool {
         self.cache.contains_key(key)
     }

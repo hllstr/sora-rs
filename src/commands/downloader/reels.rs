@@ -4,11 +4,11 @@ use serde::Deserialize;
 #[derive(Debug, Deserialize)]
 struct ApiResponse {
     status: bool,
-    result: Result,
+    result: ApiResult,
 }
 
 #[derive(Debug, Deserialize)]
-struct Result {
+struct ApiResult {
     contents: Vec<Content>,
     metadata: Metadata,
 }
@@ -41,9 +41,9 @@ cmd!(
         let data: ApiResponse = response.json().await?;
         if !data.status {
             ctx.reply("Not found").await?;
-            return Ok(())
+            return Ok(());
         }
-        
+
         let text = format!("*Author:* {}\n{}", data.result.metadata.username, data.result.metadata.title);
         send_video!(
             context: ctx,
@@ -51,7 +51,8 @@ cmd!(
             dst: ctx.info.source.chat,
             caption: text,
             reply: true
-)       .await?;
+        )
+        .await?;
 
         println!("Done!");
     }
