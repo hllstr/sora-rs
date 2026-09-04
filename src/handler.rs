@@ -1,4 +1,5 @@
 use crate::config::AppConfig;
+use crate::config::AutoreadMode;
 use crate::config::BotMode;
 use crate::config::PairingMethod;
 use crate::config::WarmupMode;
@@ -96,6 +97,8 @@ async fn handle_message(
         state.set_expiration(info.source.chat.to_string(), exp);
     }
 
+    apply_autoread(&client, &info, &state).await;
+
     let text = match msg.text_content() {
         Some(t) => t,
         None => return,
@@ -176,6 +179,43 @@ async fn handle_message(
             let sender_jid = info_c.source.sender.to_string();
 
             let _ = crate::utils::send_warmup(client_c, chat_jid, msg_id, Some(sender_jid)).await;
+        }
+    });
+}
+
+async fn apply_autoread(client: &Arc<Client>, info: &Arc<MessageInfo>, state: &Arc<AppState>) {
+    if info.source.is_from_me {
+        return;
+    }
+
+    let mode = state.get_autoread();
+    let should_read = match mode {
+        AutoreadMode::Off => false,
+        AutoreadMode::All => true,
+        AutoreadMode::Group => info.source.is_group,
+        AutoreadMode::Chat => !info.source.is_group,
+    };
+
+    if !should_read {
+        return;
+    }
+
+    let chat = info.source.chat.clone();
+    let sender = if info.source.is_group {
+        Some(info.source.sender.clone())
+    } else {
+        None
+    };
+    let msg_id = info.id.clone();
+    let client_c = Arc::clone(client);
+
+    tokio::spawn(async move {
+        let sender_ref = sender.as_ref();
+        if let Err(e) = client_c
+            .mark_as_read(&chat, sender_ref, &[msg_id.as_str()])
+            .await
+        {
+            crate::logger::error("autoread", format!("failed to mark as read: {}", e));
         }
     });
 }

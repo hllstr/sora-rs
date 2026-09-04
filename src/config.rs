@@ -34,6 +34,27 @@ pub enum PairingMethod {
     Code,
 }
 
+impl From<&str> for AutoreadMode {
+    fn from(s: &str) -> Self {
+        match s.to_lowercase().as_str() {
+            "all" => AutoreadMode::All,
+            "group" | "groups" => AutoreadMode::Group,
+            "chat" | "chats" | "dm" | "private" => AutoreadMode::Chat,
+            _ => AutoreadMode::Off,
+        }
+    }
+}
+
+#[derive(Debug, Default, Deserialize, Serialize, Clone, Copy, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum AutoreadMode {
+    #[default]
+    Off,
+    All,
+    Group,
+    Chat,
+}
+
 #[derive(Deserialize, Serialize, Clone)]
 pub struct AppConfig {
     pub prefixes: Vec<String>,
@@ -41,6 +62,8 @@ pub struct AppConfig {
     pub custom_code: String,
     pub mode: BotMode,
     pub warmup: WarmupMode,
+    #[serde(default)]
+    pub autoread: AutoreadMode,
     pub pairing: PairingMethod,
     #[serde(skip)]
     pub phone_number: String,

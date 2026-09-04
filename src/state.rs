@@ -3,7 +3,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, RwLock};
 use std::time::{Duration, Instant};
 
-use crate::config::{AppConfig, BotMode, WarmupMode};
+use crate::config::{AppConfig, AutoreadMode, BotMode, WarmupMode};
 
 const MAX_TRACKED_ENTRIES: usize = 20_000;
 
@@ -16,6 +16,7 @@ pub enum ConfigKey {
     Mode,
     Prefixes,
     Warmup,
+    Autoread,
 }
 
 pub enum ConfigValue {
@@ -33,6 +34,7 @@ pub struct AppState {
     pub mode: RwLock<BotMode>,
     pub prefixes: RwLock<Arc<Vec<String>>>,
     pub warmup: RwLock<WarmupMode>,
+    pub autoread: RwLock<AutoreadMode>,
 }
 
 impl AppState {
@@ -51,6 +53,7 @@ impl AppState {
             prefixes: RwLock::new(Arc::new(config.prefixes.clone())),
             mode: RwLock::new(config.mode),
             warmup: RwLock::new(config.warmup),
+            autoread: RwLock::new(config.autoread),
             config,
         });
 
@@ -118,6 +121,10 @@ impl AppState {
         *self.warmup.read().unwrap()
     }
 
+    pub fn get_autoread(&self) -> AutoreadMode {
+        *self.autoread.read().unwrap()
+    }
+
     pub fn set_cache(&self, key: &str, value: &str) {
         self.cache.insert(key.to_string(), value.to_string());
     }
@@ -149,6 +156,11 @@ impl AppState {
             (ConfigKey::Warmup, ConfigValue::Text(val)) => {
                 let mut warmup = self.warmup.write().unwrap();
                 *warmup = WarmupMode::from(val.as_str());
+                Ok(())
+            }
+            (ConfigKey::Autoread, ConfigValue::Text(val)) => {
+                let mut autoread = self.autoread.write().unwrap();
+                *autoread = AutoreadMode::from(val.as_str());
                 Ok(())
             }
             _ => Err("invalid datatype for this field"),
