@@ -159,18 +159,22 @@ async fn handle_message(
                 let privilege = cmd.privilege();
 
                 if privilege.owner_only && !privileged {
+                    let _ = ctx.reply("Owner only command.").await;
                     return;
                 }
 
                 if privilege.group_only && !info_c.source.is_group {
+                    let _ = ctx.reply("This command only works in groups.").await;
                     return;
                 }
 
                 if privilege.dm_only && info_c.source.is_group {
+                    let _ = ctx.reply("This command only works in DM.").await;
                     return;
                 }
 
                 if privilege.admin_only && !info_c.source.is_group {
+                    let _ = ctx.reply("This command only works in groups.").await;
                     return;
                 }
 
@@ -178,6 +182,7 @@ async fn handle_message(
                     && !privileged
                     && !is_group_admin(&client_c, &info_c).await
                 {
+                    let _ = ctx.reply("Admin only command.").await;
                     return;
                 }
 
