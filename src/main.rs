@@ -109,7 +109,7 @@ fn display_startup(phone_number: &str, superuser: &str, prefixes: Vec<String>) {
         println!(
             " {} {:<width$} {}",
             "»".bright_cyan(),
-            format!("{label}").green(),
+            label.to_string().green(),
             value,
             width = LABEL_WIDTH
         );

@@ -98,7 +98,7 @@ async fn play_audio(ctx: Context<'_>) -> anyhow::Result<()> {
                 context_info.external_ad_reply = whatsapp_rust::buffa::MessageField::some(whatsapp_rust::waproto::whatsapp::context_info::ExternalAdReplyInfo {
                     title: Some(title.to_string()),
                     body: Some(channel.to_string()),
-                    media_type: Some(whatsapp_rust::waproto::whatsapp::context_info::external_ad_reply_info::MediaType::Image.into()),
+                    media_type: Some(whatsapp_rust::waproto::whatsapp::context_info::external_ad_reply_info::MediaType::Image),
                     thumbnail_url: Some(thumbnail_url.to_string()),
                     render_larger_thumbnail: Some(true),
                     ..Default::default()
@@ -152,7 +152,7 @@ async fn play_audio(ctx: Context<'_>) -> anyhow::Result<()> {
             context_info.external_ad_reply = whatsapp_rust::buffa::MessageField::some(whatsapp_rust::waproto::whatsapp::context_info::ExternalAdReplyInfo {
                 title: Some(title.to_string()),
                 body: Some(channel.to_string()),
-                media_type: Some(whatsapp_rust::waproto::whatsapp::context_info::external_ad_reply_info::MediaType::Image.into()),
+                media_type: Some(whatsapp_rust::waproto::whatsapp::context_info::external_ad_reply_info::MediaType::Image),
                 thumbnail_url: Some(thumbnail_url.to_string()),
                 render_larger_thumbnail: Some(true),
                 ..Default::default()
