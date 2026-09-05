@@ -15,13 +15,19 @@ cmd!(
 
 async fn ping(ctx: Context<'_>) -> anyhow::Result<()> {
     let server_wangsaf = "g.whatsapp.net:443";
-    let count = ctx.args.first().and_then(|x| x.parse::<usize>().ok()).unwrap_or(1);
+    let count = ctx
+        .args
+        .first()
+        .and_then(|x| x.parse::<usize>().ok())
+        .unwrap_or(1);
 
     let net_start = Instant::now();
     TcpStream::connect(server_wangsaf).await.ok();
     let latency = net_start.elapsed();
 
-    let msg = ctx.reply("```Pong!\n----------------------\nMeasuring...```").await?;
+    let msg = ctx
+        .reply("```Pong!\n----------------------\nMeasuring...```")
+        .await?;
     let mut lines = Vec::new();
     let mut last_rtt = None;
 

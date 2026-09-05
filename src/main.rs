@@ -5,12 +5,20 @@ compile_error!(
     "Sorry but this program and it's author don't want their code to be compiled in garbage OS like Windogs. Please delete your OS and install linux instead. Tq.\n- hllstr"
 );
 
-#[cfg(all(feature = "stable", not(feature = "performance"), not(feature = "profiling")))]
+#[cfg(all(
+    feature = "stable",
+    not(feature = "performance"),
+    not(feature = "profiling")
+))]
 #[unsafe(no_mangle)]
 pub static malloc_conf: [u8; 73] =
     *b"background_thread:true,dirty_decay_ms:1000,muzzy_decay_ms:1000,narenas:1\0";
 
-#[cfg(all(feature = "stable", not(feature = "performance"), not(feature = "profiling")))]
+#[cfg(all(
+    feature = "stable",
+    not(feature = "performance"),
+    not(feature = "profiling")
+))]
 #[global_allocator]
 static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
 
@@ -75,7 +83,11 @@ async fn main() -> anyhow::Result<()> {
 fn display_startup(phone_number: &str, superuser: &str, prefixes: Vec<String>) {
     const LABEL_WIDTH: usize = 10;
 
-    #[cfg(all(feature = "stable", not(feature = "performance"), not(feature = "profiling")))]
+    #[cfg(all(
+        feature = "stable",
+        not(feature = "performance"),
+        not(feature = "profiling")
+    ))]
     let allocator = "Jemalloc";
     #[cfg(all(feature = "performance", not(feature = "profiling")))]
     let allocator = "mimalloc";
@@ -123,7 +135,9 @@ fn display_startup(phone_number: &str, superuser: &str, prefixes: Vec<String>) {
 
     println!(
         "\n {}",
-        "\"Nice, All set! Starting bot...\"".italic().bright_magenta()
+        "\"Nice, All set! Starting bot...\""
+            .italic()
+            .bright_magenta()
     );
     println!(
         "{}",

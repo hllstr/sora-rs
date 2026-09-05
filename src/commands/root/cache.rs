@@ -33,7 +33,7 @@ cmd!(
 
         response.push_str(&format!("\n*Total Unique Keys:* {}", count));
         response.push_str("\n*Uptime:* ");
-        
+
         let uptime = ctx.state.start_time.elapsed();
         response.push_str(&format!("{}s", uptime.as_secs()));
 

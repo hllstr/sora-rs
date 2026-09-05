@@ -127,7 +127,12 @@ async fn play_audio(ctx: Context<'_>) -> anyhow::Result<()> {
         .stderr(Stdio::piped())
         .spawn()?;
 
-    let output = match timeout(EXTERNAL_PROCESS_TIMEOUT, download_process.wait_with_output()).await {
+    let output = match timeout(
+        EXTERNAL_PROCESS_TIMEOUT,
+        download_process.wait_with_output(),
+    )
+    .await
+    {
         Ok(res) => res?,
         Err(_) => {
             ctx.reply("Download timed out.").await?;
