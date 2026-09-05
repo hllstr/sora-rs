@@ -215,7 +215,7 @@ async fn apply_autoread(client: &Arc<Client>, info: &Arc<MessageInfo>, state: &A
         AutoreadMode::Off => false,
         AutoreadMode::All => true,
         AutoreadMode::Group => info.source.is_group,
-        AutoreadMode::Chat => !info.source.is_group,
+        AutoreadMode::Dm => !info.source.is_group,
     };
 
     if !should_read {

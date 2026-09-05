@@ -39,7 +39,7 @@ impl From<&str> for AutoreadMode {
         match s.to_lowercase().as_str() {
             "all" => AutoreadMode::All,
             "group" | "groups" => AutoreadMode::Group,
-            "chat" | "chats" | "dm" | "private" => AutoreadMode::Chat,
+            "dm" | "chat" | "chats" | "private" => AutoreadMode::Dm,
             _ => AutoreadMode::Off,
         }
     }
@@ -52,7 +52,7 @@ pub enum AutoreadMode {
     Off,
     All,
     Group,
-    Chat,
+    Dm,
 }
 
 #[derive(Deserialize, Serialize, Clone)]
