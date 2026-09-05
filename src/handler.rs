@@ -156,11 +156,28 @@ async fn handle_message(
                     return;
                 }
 
-                if cmd.category() == "root" && !privileged {
+                let privilege = cmd.privilege();
+
+                if privilege.owner_only && !privileged {
                     return;
                 }
 
-                if cmd.category() == "group" && !info_c.source.is_group {
+                if privilege.group_only && !info_c.source.is_group {
+                    return;
+                }
+
+                if privilege.dm_only && info_c.source.is_group {
+                    return;
+                }
+
+                if privilege.admin_only && !info_c.source.is_group {
+                    return;
+                }
+
+                if privilege.admin_only
+                    && !privileged
+                    && !is_group_admin(&client_c, &info_c).await
+                {
                     return;
                 }
 
@@ -240,4 +257,16 @@ async fn is_privileged(sender: &str, info: &MessageInfo, config: &Arc<AppConfig>
     };
 
     me || su
+}
+
+async fn is_group_admin(client: &Arc<Client>, info: &MessageInfo) -> bool {
+    let Ok(metadata) = client.groups().get_metadata(&info.source.chat).await else {
+        return false;
+    };
+
+    metadata
+        .participants
+        .iter()
+        .find(|p| p.jid == info.source.sender)
+        .is_some_and(|p| p.participant_type.is_admin())
 }
