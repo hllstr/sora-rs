@@ -1,8 +1,8 @@
 use crate::utils::MessageExt;
 use crate::utils::{extract_context, extract_type_only};
 use colored::*;
-use whatsapp_rust::waproto::whatsapp::Message;
 use whatsapp_rust::types::message::MessageInfo;
+use whatsapp_rust::waproto::whatsapp::Message;
 
 const LABEL_WIDTH: usize = 11;
 
@@ -11,15 +11,30 @@ pub fn info(scope: &str, msg: impl std::fmt::Display) {
 }
 
 pub fn warn(scope: &str, msg: impl std::fmt::Display) {
-    println!("  {} {} {}", "!".yellow(), format!("[{scope}]").dimmed(), msg.to_string().yellow());
+    println!(
+        "  {} {} {}",
+        "!".yellow(),
+        format!("[{scope}]").dimmed(),
+        msg.to_string().yellow()
+    );
 }
 
 pub fn error(scope: &str, msg: impl std::fmt::Display) {
-    eprintln!("  {} {} {}", "✗".red(), format!("[{scope}]").dimmed(), msg.to_string().red());
+    eprintln!(
+        "  {} {} {}",
+        "✗".red(),
+        format!("[{scope}]").dimmed(),
+        msg.to_string().red()
+    );
 }
 
 fn row(label: &str, value: impl std::fmt::Display) {
-    println!("  {:>width$} {}", format!("{label}:").dimmed(), value, width = LABEL_WIDTH);
+    println!(
+        "  {:>width$} {}",
+        format!("{label}:").dimmed(),
+        value,
+        width = LABEL_WIDTH
+    );
 }
 
 fn truncate(text: &str, max: usize) -> String {
@@ -48,7 +63,10 @@ pub fn dump(info: &MessageInfo, msg: &Message) {
         format!("[{msg_type}]").cyan()
     );
 
-    row("From", format!("{} ({})", info.push_name.bright_green(), sender.yellow()));
+    row(
+        "From",
+        format!("{} ({})", info.push_name.bright_green(), sender.yellow()),
+    );
     row("Chat", info.source.chat.to_string());
     row("ID", info.id.as_str());
 
@@ -61,7 +79,8 @@ pub fn dump(info: &MessageInfo, msg: &Message) {
 
     if let Some(ctx) = extract_context(msg) {
         let has_reply = ctx.quoted_message.as_option().is_some();
-        let has_meta = ctx.stanza_id.is_some() || ctx.participant.is_some() || ctx.expiration.is_some();
+        let has_meta =
+            ctx.stanza_id.is_some() || ctx.participant.is_some() || ctx.expiration.is_some();
 
         if has_reply || has_meta {
             println!("  {}", "reply to:".dimmed());

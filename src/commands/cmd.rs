@@ -1,14 +1,14 @@
 use crate::state::AppState;
 use async_trait::async_trait;
 use linkme::distributed_slice;
-use whatsapp_rust::SendResult;
 use std::sync::LazyLock;
 use std::{collections::HashMap, sync::Arc};
+use whatsapp_rust::SendResult;
+use whatsapp_rust::client::Client;
 use whatsapp_rust::wacore::types::message::MessageInfo;
 use whatsapp_rust::waproto::whatsapp as wa;
 use whatsapp_rust::waproto::whatsapp::Message;
 use whatsapp_rust::waproto::whatsapp::message::ReactionMessage;
-use whatsapp_rust::client::Client;
 
 #[derive(Clone)]
 pub struct Context<'a> {

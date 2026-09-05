@@ -2,10 +2,10 @@ use std::process::Stdio;
 use std::sync::Arc;
 use tokio::io::AsyncWriteExt;
 use tokio::process::Command;
-use whatsapp_rust::waproto::whatsapp as wa;
-use whatsapp_rust::waproto::whatsapp::Message;
 use whatsapp_rust::Jid;
 use whatsapp_rust::client::Client;
+use whatsapp_rust::waproto::whatsapp as wa;
+use whatsapp_rust::waproto::whatsapp::Message;
 
 use crate::state::AppState;
 

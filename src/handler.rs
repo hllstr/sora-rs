@@ -10,6 +10,7 @@ use qr2term::print_qr;
 use std::sync::Arc;
 use std::sync::LazyLock;
 use tokio::sync::{RwLock, Semaphore};
+use whatsapp_rust::client::Client;
 use whatsapp_rust::wacore::stanza::GroupNotificationAction;
 use whatsapp_rust::wacore::types::events::GroupUpdate;
 use whatsapp_rust::wacore::types::events::InboundMessage;
@@ -17,7 +18,6 @@ use whatsapp_rust::wacore::types::events::PairingCode;
 use whatsapp_rust::wacore::types::events::PairingQrCode;
 use whatsapp_rust::wacore::types::message::MessageInfo;
 use whatsapp_rust::wacore::{client::context::SendContextResolver, types::events::Event};
-use whatsapp_rust::client::Client;
 
 static SUPERUSER_LID: LazyLock<RwLock<Vec<String>>> = LazyLock::new(|| RwLock::new(vec![]));
 
@@ -74,7 +74,10 @@ async fn handle_connected(config: Arc<AppConfig>, client: Arc<Client>) {
         if let Some(lid) = found_lid {
             lids.push(lid);
         } else {
-            crate::logger::warn("startup", format!("unable to get LID for superuser: {}", su_pn));
+            crate::logger::warn(
+                "startup",
+                format!("unable to get LID for superuser: {}", su_pn),
+            );
         }
     }
     let mut lock = SUPERUSER_LID.write().await;
@@ -178,9 +181,7 @@ async fn handle_message(
                     return;
                 }
 
-                if privilege.admin_only
-                    && !privileged
-                    && !is_group_admin(&client_c, &info_c).await
+                if privilege.admin_only && !privileged && !is_group_admin(&client_c, &info_c).await
                 {
                     let _ = ctx.reply("Admin only command.").await;
                     return;
