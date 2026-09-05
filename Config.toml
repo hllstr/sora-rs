@@ -3,5 +3,5 @@ session_path = "database/session/whatsapp.db"
 custom_code = "HELLSTAR"
 mode = "self" #self, public
 warmup = "normal" #off, normal
-autoread = "off" #off, all, chat, group
+autoread = "off" #off, all, dm, group
 pairing = "code" #qr, code

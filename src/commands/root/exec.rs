@@ -5,6 +5,7 @@ cmd!(
     name: "exec",
     aliases: ["$"],
     category: "root",
+    privilege: { owner_only: true },
     execute: |ctx| {
         let command = ctx.body;
         let output = Command::new("bash")

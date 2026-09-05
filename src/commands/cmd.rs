@@ -58,6 +58,14 @@ impl<'a> Context<'a> {
         Ok(msg_id.message_id)
     }
 }
+#[derive(Clone, Copy, Debug, Default)]
+pub struct Privilege {
+    pub dm_only: bool,
+    pub group_only: bool,
+    pub owner_only: bool,
+    pub admin_only: bool,
+}
+
 #[distributed_slice]
 pub static COMMANDS: [&(dyn Command + Sync)] = [..];
 
@@ -69,6 +77,9 @@ pub trait Command: Send + Sync {
     fn name(&self) -> &str;
     fn aliases(&self) -> &[&str];
     fn category(&self) -> &str;
+    fn privilege(&self) -> Privilege {
+        Privilege::default()
+    }
     async fn intercept(&self, _ctx: Context<'_>) -> anyhow::Result<bool> {
         Ok(false)
     }
@@ -77,6 +88,42 @@ pub trait Command: Send + Sync {
 
 #[macro_export]
 macro_rules! cmd {
+    ($struct_name:ident, name: $name:expr, aliases: [$($alias:expr),*], category: $cat:expr,
+     privilege: { $($priv_field:ident: $priv_val:expr),* $(,)? },
+     intercept: |$ctx_int:ident| $int_body:block,
+     execute: |$ctx:ident| $exec_body:block) => {
+        pub struct $struct_name;
+
+        #[async_trait::async_trait]
+        impl $crate::commands::cmd::Command for $struct_name {
+            fn name(&self) -> &str { $name }
+            fn aliases(&self) -> &[&str] { &[$($alias),*] }
+            fn category(&self) -> &str { $cat }
+
+            fn privilege(&self) -> $crate::commands::cmd::Privilege {
+                $crate::commands::cmd::Privilege {
+                    $($priv_field: $priv_val,)*
+                    ..Default::default()
+                }
+            }
+
+            async fn intercept(&self, $ctx_int: $crate::commands::cmd::Context<'_>) -> anyhow::Result<bool> {
+                $int_body
+            }
+
+            async fn execute(&self, $ctx: $crate::commands::cmd::Context<'_>) -> anyhow::Result<()> {
+                $exec_body;
+                Ok(())
+            }
+        }
+
+        #[linkme::distributed_slice($crate::commands::cmd::COMMANDS)]
+        static COMMAND: &(dyn $crate::commands::cmd::Command + Sync) = &$struct_name;
+
+        #[linkme::distributed_slice($crate::commands::cmd::INTERCEPTORS)]
+        static INTERCEPTOR: &(dyn $crate::commands::cmd::Command + Sync) = &$struct_name;
+    };
+
     ($struct_name:ident, name: $name:expr, aliases: [$($alias:expr),*], category: $cat:expr,
      intercept: |$ctx_int:ident| $int_body:block,
      execute: |$ctx:ident| $exec_body:block) => {
@@ -103,6 +150,34 @@ macro_rules! cmd {
 
         #[linkme::distributed_slice($crate::commands::cmd::INTERCEPTORS)]
         static INTERCEPTOR: &(dyn $crate::commands::cmd::Command + Sync) = &$struct_name;
+    };
+
+    ($struct_name:ident, name: $name:expr, aliases: [$($alias:expr),*], category: $cat:expr,
+     privilege: { $($priv_field:ident: $priv_val:expr),* $(,)? },
+     execute: |$ctx:ident| $body:block) => {
+        pub struct $struct_name;
+
+        #[async_trait::async_trait]
+        impl $crate::commands::cmd::Command for $struct_name {
+            fn name(&self) -> &str { $name }
+            fn aliases(&self) -> &[&str] { &[$($alias),*] }
+            fn category(&self) -> &str { $cat }
+
+            fn privilege(&self) -> $crate::commands::cmd::Privilege {
+                $crate::commands::cmd::Privilege {
+                    $($priv_field: $priv_val,)*
+                    ..Default::default()
+                }
+            }
+
+            async fn execute(&self, $ctx: $crate::commands::cmd::Context<'_> ) -> anyhow::Result<()> {
+                $body;
+                Ok(())
+            }
+        }
+
+        #[linkme::distributed_slice($crate::commands::cmd::COMMANDS)]
+        static COMMAND: &(dyn $crate::commands::cmd::Command + Sync) = &$struct_name;
     };
 
     ($struct_name:ident, name: $name:expr, aliases: [$($alias:expr),*], category: $cat:expr, execute: |$ctx:ident| $body:block) => {

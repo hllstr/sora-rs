@@ -8,6 +8,7 @@ cmd!(
     name: "group",
     aliases: ["gc"],
     category: "group",
+    privilege: { admin_only: true },
     execute: |ctx| {
         let Some(subcommand) = ctx.args.first().copied() else {
             ctx.react("❔").await?;

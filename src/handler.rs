@@ -156,11 +156,33 @@ async fn handle_message(
                     return;
                 }
 
-                if cmd.category() == "root" && !privileged {
+                let privilege = cmd.privilege();
+
+                if privilege.owner_only && !privileged {
+                    let _ = ctx.reply("Owner only command.").await;
                     return;
                 }
 
-                if cmd.category() == "group" && !info_c.source.is_group {
+                if privilege.group_only && !info_c.source.is_group {
+                    let _ = ctx.reply("This command only works in groups.").await;
+                    return;
+                }
+
+                if privilege.dm_only && info_c.source.is_group {
+                    let _ = ctx.reply("This command only works in DM.").await;
+                    return;
+                }
+
+                if privilege.admin_only && !info_c.source.is_group {
+                    let _ = ctx.reply("This command only works in groups.").await;
+                    return;
+                }
+
+                if privilege.admin_only
+                    && !privileged
+                    && !is_group_admin(&client_c, &info_c).await
+                {
+                    let _ = ctx.reply("Admin only command.").await;
                     return;
                 }
 
@@ -193,7 +215,7 @@ async fn apply_autoread(client: &Arc<Client>, info: &Arc<MessageInfo>, state: &A
         AutoreadMode::Off => false,
         AutoreadMode::All => true,
         AutoreadMode::Group => info.source.is_group,
-        AutoreadMode::Chat => !info.source.is_group,
+        AutoreadMode::Dm => !info.source.is_group,
     };
 
     if !should_read {
@@ -240,4 +262,16 @@ async fn is_privileged(sender: &str, info: &MessageInfo, config: &Arc<AppConfig>
     };
 
     me || su
+}
+
+async fn is_group_admin(client: &Arc<Client>, info: &MessageInfo) -> bool {
+    let Ok(metadata) = client.groups().get_metadata(&info.source.chat).await else {
+        return false;
+    };
+
+    metadata
+        .participants
+        .iter()
+        .find(|p| p.jid == info.source.sender)
+        .is_some_and(|p| p.participant_type.is_admin())
 }
