@@ -10,8 +10,29 @@ permissions:
   contents: write
 
 jobs:
+  changelog:
+    name: Generate Changelog
+    runs-on: ubuntu-latest
+    outputs:
+      changelog: ${{ steps.git-cliff.outputs.content }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate changelog from commits
+        id: git-cliff
+        uses: orhun/git-cliff-action@v4
+        with:
+          config: cliff.toml
+          args: --latest --strip header
+        env:
+          OUTPUT: CHANGES.md
+
   build-and-release:
     name: Build (${{ matrix.build_type }} / ${{ matrix.target }})
+    needs: changelog
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -43,5 +64,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: sora-on-rust-${{ matrix.build_type }}-${{ matrix.target }}
+          body: ${{ needs.changelog.outputs.changelog }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
