@@ -67,6 +67,7 @@ cmd!(
                 autoread: state.get_autoread(),
                 show_online: state.get_show_online(),
                 wa_log_level: state.config.wa_log_level,
+                debug_dump: state.config.debug_dump,
                 mode: state.get_mode(),
                 prefixes: state.get_prefixes().to_vec(),
             };
