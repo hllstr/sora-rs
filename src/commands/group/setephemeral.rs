@@ -5,7 +5,7 @@ cmd!(
     name: "setephemeral",
     aliases: ["ephemeral", "pesansementara"],
     category: "group",
-    privilege: { admin_only: true },
+    access: { admin_only: true },
     execute: |ctx| {
         let seconds: u32 = match ctx.args.first().copied() {
             Some("off") | Some("0") => 0,

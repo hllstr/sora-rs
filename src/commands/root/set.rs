@@ -7,7 +7,7 @@ cmd!(
     name: "set",
     aliases: ["setting"],
     category: "root",
-    privilege: { owner_only: true },
+    access: { owner_only: true },
     execute: |ctx| {
         if ctx.args.len() < 2 {
             ctx.react("❔").await?;

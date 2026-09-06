@@ -6,7 +6,7 @@ cmd!(
     name: "demote",
     aliases: ["dm"],
     category: "group",
-    privilege: { admin_only: true },
+    access: { admin_only: true },
     execute: |ctx| {
         let mut targets: Vec<Jid> = Vec::new();
         if let Some(ext_msg) = ctx.msg.extended_text_message.as_option()

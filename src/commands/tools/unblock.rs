@@ -6,7 +6,7 @@ cmd!(
     name: "unblock",
     aliases: ["bukablokir"],
     category: "tools",
-    privilege: { owner_only: true },
+    access: { owner_only: true },
     execute: |ctx| {
         let target: Jid = if let Some(arg) = ctx.args.first() {
             let normalized = arg.trim_start_matches('+').replace([' ', '-'], "");

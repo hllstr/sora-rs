@@ -6,7 +6,7 @@ cmd!(
     name: "delete",
     aliases: ["del", "hapus"],
     category: "group",
-    privilege: { admin_only: true },
+    access: { admin_only: true },
     execute: |ctx| {
         let quoted_id = if let Some(ext) = ctx.msg.extended_text_message.as_option()
             && let Some(ci) = ext.context_info.as_option()
