@@ -55,6 +55,44 @@ pub enum AutoreadMode {
     Dm,
 }
 
+impl From<&str> for WaLogLevel {
+    fn from(s: &str) -> Self {
+        match s.to_lowercase().as_str() {
+            "error" => WaLogLevel::Error,
+            "warn" => WaLogLevel::Warn,
+            "info" => WaLogLevel::Info,
+            "debug" => WaLogLevel::Debug,
+            "trace" => WaLogLevel::Trace,
+            _ => WaLogLevel::Off,
+        }
+    }
+}
+
+impl WaLogLevel {
+    pub fn as_filter_str(&self) -> &'static str {
+        match self {
+            WaLogLevel::Off => "off",
+            WaLogLevel::Error => "error",
+            WaLogLevel::Warn => "warn",
+            WaLogLevel::Info => "info",
+            WaLogLevel::Debug => "debug",
+            WaLogLevel::Trace => "trace",
+        }
+    }
+}
+
+#[derive(Debug, Default, Deserialize, Serialize, Clone, Copy, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum WaLogLevel {
+    #[default]
+    Off,
+    Error,
+    Warn,
+    Info,
+    Debug,
+    Trace,
+}
+
 #[derive(Deserialize, Serialize, Clone)]
 pub struct AppConfig {
     pub prefixes: Vec<String>,
@@ -67,6 +105,8 @@ pub struct AppConfig {
     pub pairing: PairingMethod,
     #[serde(default = "default_show_online")]
     pub show_online: bool,
+    #[serde(default)]
+    pub wa_log_level: WaLogLevel,
     #[serde(skip)]
     pub phone_number: String,
     #[serde(skip)]

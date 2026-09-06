@@ -5,4 +5,5 @@ mode = "self" #self, public
 warmup = "normal" #off, normal
 autoread = "off" #off, all, dm, group
 pairing = "code" #qr, code
-show_online = true
+show_online = true #true, false
+wa_log_level = "off" #off, error, warn, info, debug, trace
