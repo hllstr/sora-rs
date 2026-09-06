@@ -19,7 +19,6 @@ A Simple, Lightweight and Fast WhatsApp Bot Written on rust.
 
 ## Todo
 - ai
-- translate
 - store
   
 ## Acknowledgemnt
