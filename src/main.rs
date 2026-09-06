@@ -24,7 +24,7 @@ static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
 
 #[cfg(all(feature = "performance", not(feature = "profiling")))]
 #[global_allocator]
-static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
+static GLOBAL: snmalloc_rs::SnMalloc = snmalloc_rs::SnMalloc;
 
 #[cfg(feature = "profiling")]
 #[global_allocator]
@@ -96,7 +96,7 @@ fn display_startup(phone_number: &str, superuser: &str, prefixes: Vec<String>) {
     ))]
     let allocator = "Jemalloc";
     #[cfg(all(feature = "performance", not(feature = "profiling")))]
-    let allocator = "mimalloc";
+    let allocator = "snmalloc";
     #[cfg(feature = "profiling")]
     let allocator = "dhat";
 

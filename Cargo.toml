@@ -14,7 +14,7 @@ env_logger = "0.11"
 libc = "0.2.186"
 linkme = "0.3.36"
 log = "0.4"
-mimalloc = { version = "0.1.50", optional = true }
+snmalloc-rs = { version = "0.7.4", optional = true }
 qr2term = "0.3.3"
 tikv-jemallocator = { version = "0.7", optional = true }
 toml = "1.1.2"
@@ -23,7 +23,7 @@ toml = "1.1.2"
 default = ["stable"]
 
 stable = ["dep:tikv-jemallocator"]
-performance = ["dep:mimalloc"]
+performance = ["dep:snmalloc-rs"]
 profiling = ["dep:dhat"]
 
 [dependencies.dashmap]
