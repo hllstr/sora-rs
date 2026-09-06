@@ -7,7 +7,7 @@ cmd!(
     name: "mute",
     aliases: ["bungkam"],
     category: "group",
-    privilege: { admin_only: true },
+    access: { admin_only: true },
     intercept: |ctx| {
         let chat_jid = ctx.info.source.chat.to_string();
         let sender_jid = ctx.info.source.sender.to_non_ad().to_string();

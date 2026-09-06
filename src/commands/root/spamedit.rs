@@ -7,7 +7,7 @@ cmd!(
     name: "spamedit",
     aliases: ["se", "spedit"],
     category: "root",
-    privilege: { owner_only: true },
+    access: { owner_only: true },
     execute: |ctx| {
         spam_edit(ctx).await?;
     }

@@ -6,7 +6,7 @@ cmd!(
     name: "hidetag",
     aliases: ["ht", "tagall"],
     category: "group",
-    privilege: { admin_only: true },
+    access: { admin_only: true },
     execute: |ctx| {
         let info = ctx.client.groups().query_info(&ctx.info.source.chat).await?;
         let mentions: Vec<String> = info.participants.iter().map(|jid| jid.to_string()).collect();

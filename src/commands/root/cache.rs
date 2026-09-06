@@ -5,7 +5,7 @@ cmd!(
     name: "cache",
     aliases: ["listcache", "inspectcache"],
     category: "root",
-    privilege: { owner_only: true },
+    access: { owner_only: true },
     execute: |ctx| {
         if ctx.state.cache.is_empty() {
             ctx.reply("*Empty!*").await?;
