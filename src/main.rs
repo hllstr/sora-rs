@@ -54,6 +54,12 @@ async fn main() -> anyhow::Result<()> {
     let _profiler = dhat::Profiler::new_heap();
 
     let config = Arc::new(config::AppConfig::load()?);
+
+    if config.wa_log_level != config::WaLogLevel::Off {
+        let filter = config.wa_log_level.as_filter_str().to_string();
+        env_logger::Builder::from_env(env_logger::Env::default().default_filter_or(filter)).init();
+    }
+
     let state = state::AppState::load(config.clone());
     let bot = client::create_bot(config.clone(), state.clone()).await?;
 
