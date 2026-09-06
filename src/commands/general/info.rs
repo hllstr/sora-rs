@@ -100,7 +100,7 @@ cmd!(
         #[cfg(all(feature = "stable", not(feature = "performance"), not(feature = "profiling")))]
         let allocator = "Jemalloc";
         #[cfg(all(feature = "performance", not(feature = "profiling")))]
-        let allocator = "mimalloc";
+        let allocator = "snmalloc";
         #[cfg(feature = "profiling")]
         let allocator = "dhat";
         let mut categories = HashSet::new();
