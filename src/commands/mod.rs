@@ -29,5 +29,6 @@ pub mod tools {
     pub mod debug;
     pub mod listblock;
     pub mod rvo;
+    pub mod translate;
     pub mod unblock;
 }
