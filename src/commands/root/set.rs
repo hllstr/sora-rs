@@ -37,6 +37,18 @@ cmd!(
                 let _ = ctx.state.set_config(ConfigKey::Autoread, ConfigValue::Text(val_str.clone()));
                 ctx.react("✅️").await?;
             },
+            "show_online" => {
+                let enabled = matches!(val_str.to_lowercase().as_str(), "on" | "true" | "yes" | "enable" | "enabled");
+                let _ = ctx.state.set_config(ConfigKey::ShowOnline, ConfigValue::Bool(enabled));
+
+                if enabled {
+                    let _ = ctx.client.presence().set_available().await;
+                } else {
+                    let _ = ctx.client.presence().set_unavailable().await;
+                }
+
+                ctx.react("✅️").await?;
+            },
             _ => {
                 ctx.react("❔").await?;
                 return Ok(());
@@ -53,6 +65,7 @@ cmd!(
                 pairing: state.config.pairing,
                 warmup: state.get_warmup(),
                 autoread: state.get_autoread(),
+                show_online: state.get_show_online(),
                 mode: state.get_mode(),
                 prefixes: state.get_prefixes().to_vec(),
             };

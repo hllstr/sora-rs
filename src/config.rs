@@ -65,10 +65,16 @@ pub struct AppConfig {
     #[serde(default)]
     pub autoread: AutoreadMode,
     pub pairing: PairingMethod,
+    #[serde(default = "default_show_online")]
+    pub show_online: bool,
     #[serde(skip)]
     pub phone_number: String,
     #[serde(skip)]
     pub superuser: Vec<String>,
+}
+
+fn default_show_online() -> bool {
+    true
 }
 
 impl AppConfig {

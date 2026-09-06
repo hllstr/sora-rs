@@ -30,7 +30,7 @@ pub async fn event_handler(
     state: Arc<AppState>,
 ) {
     match &*event {
-        Event::Connected(_) => handle_connected(config, client).await,
+        Event::Connected(_) => handle_connected(config, client, state).await,
         Event::Messages(batch) => {
             for InboundMessage { message, info, .. } in batch.iter() {
                 crate::logger::dump(info, message);
@@ -61,13 +61,17 @@ pub async fn event_handler(
     }
 }
 
-async fn handle_connected(config: Arc<AppConfig>, client: Arc<Client>) {
+async fn handle_connected(config: Arc<AppConfig>, client: Arc<Client>, state: Arc<AppState>) {
     let current_name = client.push_name();
     if current_name.is_empty() {
         let _ = client.profile().set_push_name("sora-on-rust").await;
     }
 
-    let _ = client.presence().set_available().await;
+    if state.get_show_online() {
+        let _ = client.presence().set_available().await;
+    } else {
+        let _ = client.presence().set_unavailable().await;
+    }
     let mut lids = vec![];
     for su_pn in &config.superuser {
         let found_lid = client.get_lid_for_phone(su_pn).await.map(|j| j.to_string());
