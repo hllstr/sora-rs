@@ -1,5 +1,5 @@
 use dashmap::DashMap;
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, RwLock};
 use std::time::{Duration, Instant};
 
@@ -17,11 +17,13 @@ pub enum ConfigKey {
     Prefixes,
     Warmup,
     Autoread,
+    ShowOnline,
 }
 
 pub enum ConfigValue {
     Text(String),
     List(Vec<String>),
+    Bool(bool),
 }
 
 pub struct AppState {
@@ -35,6 +37,7 @@ pub struct AppState {
     pub prefixes: RwLock<Arc<Vec<String>>>,
     pub warmup: RwLock<WarmupMode>,
     pub autoread: RwLock<AutoreadMode>,
+    pub show_online: AtomicBool,
 }
 
 impl AppState {
@@ -54,6 +57,7 @@ impl AppState {
             mode: RwLock::new(config.mode),
             warmup: RwLock::new(config.warmup),
             autoread: RwLock::new(config.autoread),
+            show_online: AtomicBool::new(config.show_online),
             config,
         });
 
@@ -125,6 +129,10 @@ impl AppState {
         *self.autoread.read().unwrap()
     }
 
+    pub fn get_show_online(&self) -> bool {
+        self.show_online.load(Ordering::Relaxed)
+    }
+
     pub fn set_cache(&self, key: &str, value: &str) {
         self.cache.insert(key.to_string(), value.to_string());
     }
@@ -161,6 +169,10 @@ impl AppState {
             (ConfigKey::Autoread, ConfigValue::Text(val)) => {
                 let mut autoread = self.autoread.write().unwrap();
                 *autoread = AutoreadMode::from(val.as_str());
+                Ok(())
+            }
+            (ConfigKey::ShowOnline, ConfigValue::Bool(val)) => {
+                self.show_online.store(val, Ordering::Relaxed);
                 Ok(())
             }
             _ => Err("invalid datatype for this field"),
