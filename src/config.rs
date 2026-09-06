@@ -107,6 +107,8 @@ pub struct AppConfig {
     pub show_online: bool,
     #[serde(default)]
     pub wa_log_level: WaLogLevel,
+    #[serde(default)]
+    pub debug_dump: bool,
     #[serde(skip)]
     pub phone_number: String,
     #[serde(skip)]
