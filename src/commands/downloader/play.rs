@@ -9,10 +9,52 @@ use tokio::time::timeout;
 
 const EXTERNAL_PROCESS_TIMEOUT: Duration = Duration::from_secs(120);
 
+const MAX_DOWNLOADS_CACHE_BYTES: u64 = 2 * 1024 * 1024 * 1024;
+
 fn cache_key(input: &str) -> String {
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     input.hash(&mut hasher);
     format!("{:016x}", hasher.finish())
+}
+
+pub fn evict_downloads_cache_if_needed() {
+    let dir = Path::new("downloads");
+    let Ok(read_dir) = fs::read_dir(dir) else {
+        return;
+    };
+
+    let mut entries: Vec<(std::path::PathBuf, u64, std::time::SystemTime)> = Vec::new();
+    let mut total: u64 = 0;
+
+    for entry in read_dir.flatten() {
+        let Ok(meta) = entry.metadata() else { continue };
+        if !meta.is_file() {
+            continue;
+        }
+        let size = meta.len();
+        let accessed = meta
+            .accessed()
+            .or_else(|_| meta.modified())
+            .unwrap_or(std::time::SystemTime::UNIX_EPOCH);
+        total += size;
+        entries.push((entry.path(), size, accessed));
+    }
+
+    if total <= MAX_DOWNLOADS_CACHE_BYTES {
+        return;
+    }
+
+    entries.sort_unstable_by_key(|(_, _, accessed)| *accessed);
+
+    let mut to_free = total - MAX_DOWNLOADS_CACHE_BYTES;
+    for (path, size, _) in entries {
+        if to_free == 0 {
+            break;
+        }
+        if fs::remove_file(&path).is_ok() {
+            to_free = to_free.saturating_sub(size);
+        }
+    }
 }
 
 cmd!(
@@ -165,6 +207,8 @@ async fn play_audio(ctx: Context<'_>) -> anyhow::Result<()> {
         }
     )
     .await?;
+
+    tokio::task::spawn_blocking(evict_downloads_cache_if_needed);
 
     Ok(())
 }

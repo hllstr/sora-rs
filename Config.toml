@@ -7,3 +7,4 @@ autoread = "off" #off, all, dm, group
 pairing = "code" #qr, code
 show_online = true
 wa_log_level = "off"
+debug_dump = false # true = print every inbound message to console (costly, dev only)

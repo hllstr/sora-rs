@@ -45,7 +45,13 @@ impl AppState {
         let start_time = Instant::now();
         let cache = DashMap::new();
         let expirations = DashMap::new();
-        let http_client = reqwest::Client::new();
+        let http_client = reqwest::Client::builder()
+            .connect_timeout(Duration::from_secs(10))
+            .timeout(Duration::from_secs(60))
+            .pool_idle_timeout(Duration::from_secs(90))
+            .pool_max_idle_per_host(8)
+            .build()
+            .unwrap_or_else(|_| reqwest::Client::new());
 
         let state = Arc::new(Self {
             http_client,
@@ -114,19 +120,31 @@ impl AppState {
     }
 
     pub fn get_mode(&self) -> BotMode {
-        *self.mode.read().unwrap()
+        *self
+            .mode
+            .read()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
     }
 
     pub fn get_prefixes(&self) -> Arc<Vec<String>> {
-        self.prefixes.read().unwrap().clone()
+        self.prefixes
+            .read()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .clone()
     }
 
     pub fn get_warmup(&self) -> WarmupMode {
-        *self.warmup.read().unwrap()
+        *self
+            .warmup
+            .read()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
     }
 
     pub fn get_autoread(&self) -> AutoreadMode {
-        *self.autoread.read().unwrap()
+        *self
+            .autoread
+            .read()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
     }
 
     pub fn get_show_online(&self) -> bool {
@@ -148,7 +166,10 @@ impl AppState {
     pub fn set_config(&self, key: ConfigKey, value: ConfigValue) -> Result<(), &'static str> {
         match (key, value) {
             (ConfigKey::Mode, ConfigValue::Text(val)) => {
-                let mut mode = self.mode.write().unwrap();
+                let mut mode = self
+                    .mode
+                    .write()
+                    .unwrap_or_else(|poisoned| poisoned.into_inner());
                 *mode = if val.to_lowercase() == "self" {
                     BotMode::SelfMode
                 } else {
@@ -157,17 +178,26 @@ impl AppState {
                 Ok(())
             }
             (ConfigKey::Prefixes, ConfigValue::List(val)) => {
-                let mut prefixes = self.prefixes.write().unwrap();
+                let mut prefixes = self
+                    .prefixes
+                    .write()
+                    .unwrap_or_else(|poisoned| poisoned.into_inner());
                 *prefixes = val.into();
                 Ok(())
             }
             (ConfigKey::Warmup, ConfigValue::Text(val)) => {
-                let mut warmup = self.warmup.write().unwrap();
+                let mut warmup = self
+                    .warmup
+                    .write()
+                    .unwrap_or_else(|poisoned| poisoned.into_inner());
                 *warmup = WarmupMode::from(val.as_str());
                 Ok(())
             }
             (ConfigKey::Autoread, ConfigValue::Text(val)) => {
-                let mut autoread = self.autoread.write().unwrap();
+                let mut autoread = self
+                    .autoread
+                    .write()
+                    .unwrap_or_else(|poisoned| poisoned.into_inner());
                 *autoread = AutoreadMode::from(val.as_str());
                 Ok(())
             }

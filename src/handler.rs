@@ -33,7 +33,9 @@ pub async fn event_handler(
         Event::Connected(_) => handle_connected(config, client, state).await,
         Event::Messages(batch) => {
             for InboundMessage { message, info, .. } in batch.iter() {
-                crate::logger::dump(info, message);
+                if config.debug_dump {
+                    crate::logger::dump(info, message);
+                }
                 handle_message(
                     Arc::clone(message),
                     Arc::clone(&client),
@@ -117,6 +119,13 @@ async fn handle_message(
     let prefix_len = found_prefix.map(|p| p.len()).unwrap_or(0);
 
     let base = &text[prefix_len..];
+
+    let needs_warmup = !is_command && state.get_warmup() != WarmupMode::Off;
+    let needs_interceptors = !crate::commands::cmd::INTERCEPTORS.is_empty() && !state.cache.is_empty();
+    if !is_command && !needs_interceptors && !needs_warmup {
+        return;
+    }
+
     let mut parts = base.split_whitespace();
     let cmd_name = parts.next().unwrap_or("").to_lowercase();
     let args: Vec<&str> = parts.collect();
@@ -148,9 +157,11 @@ async fn handle_message(
             body: &body,
         };
 
-        for interceptor in crate::commands::cmd::INTERCEPTORS {
-            if let Ok(true) = interceptor.intercept(ctx.clone()).await {
-                return;
+        if needs_interceptors {
+            for interceptor in crate::commands::cmd::INTERCEPTORS {
+                if let Ok(true) = interceptor.intercept(ctx.clone()).await {
+                    return;
+                }
             }
         }
 
@@ -200,7 +211,7 @@ async fn handle_message(
                 }
                 let _ = client_c.chatstate().send_paused(&info_c.source.chat).await;
             }
-        } else if state_c.get_warmup() != WarmupMode::Off {
+        } else if needs_warmup {
             let chat_jid = info_c.source.chat.clone();
             let msg_id = info_c.id.clone();
             let sender_jid = info_c.source.sender.to_string();

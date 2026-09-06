@@ -9,6 +9,10 @@ cmd!(
     category: "group",
     access: { admin_only: true },
     intercept: |ctx| {
+        if ctx.state.cache.is_empty() {
+            return Ok(false);
+        }
+
         let chat_jid = ctx.info.source.chat.to_string();
         let sender_jid = ctx.info.source.sender.to_non_ad().to_string();
         let key = format!("mute:{}:{}", chat_jid, sender_jid);
